@@ -135,6 +135,9 @@
       box-shadow: 0 8px 22px rgba(13,110,253,0.08);
       border-color: rgba(13,110,253,0.25);
     }
+
+    /* search input styling */
+    .search-input { max-width: 420px; }
   </style>
 </head>
 <body>
@@ -157,12 +160,16 @@
     <div class="card mb-3">
       <div class="card-header bg-transparent">Personnages & emprunts</div>
       <div class="card-body">
-        <form id="addUserForm" class="row g-2 mb-3">
-          <div class="col-8 col-sm-9">
+        <form id="addUserForm" class="row g-2 mb-2">
+          <div class="col-12 col-md-6 d-flex gap-2">
             <input id="userName" class="form-control" placeholder="Nom du personnage (ex: Dupont)" required>
-          </div>
-          <div class="col-4 col-sm-3 d-grid">
             <button class="btn btn-success" type="submit">Ajouter</button>
+          </div>
+
+          <!-- search on the right (desktop) / above mobile -->
+          <div class="col-12 col-md-6 d-flex justify-content-md-end align-items-center gap-2">
+            <input id="userSearch" class="form-control search-input" placeholder="Rechercher un personnage..." aria-label="Recherche personnes">
+            <button id="clearSearch" class="btn btn-sm btn-outline-secondary">×</button>
           </div>
         </form>
 
@@ -301,6 +308,10 @@
     const addUserForm = document.getElementById('addUserForm');
     const addProdBtn = document.getElementById('addProdBtn');
 
+    // search refs
+    const userSearch = document.getElementById('userSearch');
+    const clearSearch = document.getElementById('clearSearch');
+
     /* ---------------------------
        UTIL
        --------------------------- */
@@ -315,19 +326,29 @@
     }
 
     /* ---------------------------
-       USERS: load / render
+       USERS: cache + load / render / search
        --------------------------- */
+    let usersCache = []; // cached list from DB
+
     async function loadUsers() {
       try {
         const { data, error } = await supabaseClient.from('users').select('*').order('id', { ascending: true });
         if (error) throw error;
-        renderUsers(data || []);
+        usersCache = data || [];
+        applyUserFilter(); // render filtered view (initially empty filter -> all)
       } catch (err) {
         console.error('Erreur loadUsers', err);
       }
     }
 
+    function applyUserFilter() {
+      const q = (userSearch.value || '').trim().toLowerCase();
+      const filtered = q === '' ? usersCache : usersCache.filter(u => (u.name || '').toLowerCase().includes(q));
+      renderUsers(filtered);
+    }
+
     function renderUsers(users) {
+      // Desktop table
       userTableBody.innerHTML = '';
       users.forEach(user => {
         const tr = document.createElement('tr');
@@ -341,6 +362,7 @@
         userTableBody.appendChild(tr);
       });
 
+      // attach events for desktop
       userTableBody.querySelectorAll('input[type="checkbox"]').forEach(cb => {
         cb.onchange = async (ev) => {
           const id = cb.dataset.id;
@@ -362,7 +384,7 @@
         };
       });
 
-      // Mobile
+      // Mobile cards
       userCards.innerHTML = '';
       users.forEach(user => {
         const div = document.createElement('div');
@@ -407,14 +429,16 @@
       try {
         const { error } = await supabaseClient.from('users').update(changes).eq('id', userId);
         if (error) throw error;
-        await loadUsers();
+        // update local cache quickly instead of full reload for snappier UI
+        usersCache = usersCache.map(u => u.id == userId ? { ...u, ...changes } : u);
+        applyUserFilter();
       } catch (err) {
         console.error('Erreur updateUserField', err);
       }
     }
 
     /* ---------------------------
-       PRODUCTION: load / render / edit
+       PRODUCTION: load / render / edit (identique)
        --------------------------- */
     async function loadProduction() {
       try {
@@ -636,10 +660,12 @@
       const name = document.getElementById('userName').value.trim();
       if (!name) return alert('Nom requis');
       try {
-        const { error } = await supabaseClient.from('users').insert([{ name, weapon_given: false, ammo_given: false, radio_given: false }]);
+        const { data, error } = await supabaseClient.from('users').insert([{ name, weapon_given: false, ammo_given: false, radio_given: false }]).select();
         if (error) throw error;
+        // push new user to cache and reapply filter so it's immediately visible
+        usersCache.push(data[0]);
         document.getElementById('userName').value = '';
-        await loadUsers();
+        applyUserFilter();
       } catch (err) {
         console.error('Erreur add user', err);
       }
@@ -662,6 +688,18 @@
       } catch (err) {
         console.error('Erreur add production', err);
       }
+    });
+
+    /* ---------------------------
+       Search events (live)
+       --------------------------- */
+    userSearch.addEventListener('input', () => {
+      applyUserFilter();
+    });
+    clearSearch.addEventListener('click', () => {
+      userSearch.value = '';
+      applyUserFilter();
+      userSearch.focus();
     });
 
     /* ---------------------------
@@ -693,7 +731,6 @@
 
     // UX: re-render after orientation change so mobile/desktop view snaps correctly
     window.addEventListener('orientationchange', () => { setTimeout(() => { loadUsers(); loadProduction(); }, 300); });
-
   </script>
 </body>
 </html>
