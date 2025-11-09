@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inventaire Beltran</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <style>
+    /* === BODY === */
+    body {
+      font-family: 'Georgia', serif;
+      padding: 20px;
+      background: linear-gradient(135deg, #1c1c1c, #2a2a2a);
+      color: #f2f2f2;
+    }
+
+    h1, h2 {
+      font-family: 'Palatino Linotype', serif;
+      text-align: center;
+      color: #f2b33d;
+      text-shadow: 1px 1px 4px #000;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+      background-color: rgba(0,0,0,0.7);
+      box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    }
+
+    th, td {
+      padding: 10px 12px;
+      border: 1px solid #444;
+      text-align: left;
+      color: #f2f2f2;
+    }
+
+    th {
+      background-color: #3d0000;
+      color: #f2b33d;
+    }
+
+    input[type="text"], input[type="number"] {
+      padding: 5px;
+      margin-right: 10px;
+      border: 1px solid #888;
+      border-radius: 4px;
+      background-color: #222;
+      color: #f2f2f2;
+      width: 90%;
+    }
+
+    button {
+      padding: 6px 12px;
+      cursor: pointer;
+      background-color: #8b0000;
+      color: #f2b33d;
+      border: none;
+      border-radius: 5px;
+      font-weight: bold;
+      transition: all 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #f2b33d;
+      color: #8b0000;
+      transform: scale(1.05);
+    }
+
+    #totals {
+      font-weight: bold;
+      margin-bottom: 20px;
+      text-align: right;
+      font-size: 1.2em;
+      color: #f2b33d;
+    }
+
+    /* Inputs focus */
+    input:focus {
+      outline: none;
+      border: 1px solid #f2b33d;
+      box-shadow: 0 0 5px #f2b33d;
+    }
+  </style>
+</head>
+<body>
+  <h1>Inventaire Mafia</h1>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Nom</th>
+        <th>Prix ($)</th>
+        <th>Quantité</th>
+        <th>Total ($)</th>
+      </tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
+
+  <div id="totals">Total global : $0</div>
+
+  <h2>Ajouter un article</h2>
+  <input type="text" id="name" placeholder="Nom" />
+  <input type="number" id="price" placeholder="Prix" />
+  <input type="number" id="qty" placeholder="Quantité" />
+  <button id="addBtn">Ajouter</button>
+
+  <script>
+    const SUPABASE_URL = "https://ldhxyloqdtplevdkgnah.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxkaHh5bG9xZHRwbGV2ZGtnbmFoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEyMTg5NjAsImV4cCI6MjA3Njc5NDk2MH0.pnoppZtVEP3uDrMEfauPAMMB93EmGO5Ur1pg4OY99-o";
+
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const tbody = document.getElementById('tbody');
+    const totalsEl = document.getElementById('totals');
+    const addBtn = document.getElementById('addBtn');
+    const nameInput = document.getElementById('name');
+    const priceInput = document.getElementById('price');
+    const qtyInput = document.getElementById('qty');
+
+    async function loadItems() {
+      tbody.innerHTML = '<tr><td colspan="4">Chargement...</td></tr>';
+      const { data, error } = await supabaseClient.from('items').select('*').order('id', { ascending: true });
+      if (error) {
+        tbody.innerHTML = '<tr><td colspan="4">Erreur chargement</td></tr>';
+        console.error(error);
+        return;
+      }
+      renderItems(data);
+    }
+
+    function renderItems(items) {
+      tbody.innerHTML = '';
+      let totalGlobal = 0;
+      items.forEach(item => {
+        const totalItem = (item.price || 0) * (item.qty || 0);
+        totalGlobal += totalItem;
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><input type="text" value="${item.name || ''}" data-id="${item.id}" class="edit-name"></td>
+          <td>${item.price || 0}</td>
+          <td><input type="number" value="${item.qty || 0}" data-id="${item.id}" class="edit-qty" min="0"></td>
+          <td class="item-total">${totalItem}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+      totalsEl.textContent = 'Total global : $' + totalGlobal;
+
+      document.querySelectorAll('.edit-name').forEach(input => {
+        input.addEventListener('change', async () => {
+          const id = input.dataset.id;
+          const newName = input.value.trim();
+          if (!newName) return alert("Le nom ne peut pas être vide.");
+          const { error } = await supabaseClient.from('items').update({ name: newName }).eq('id', id);
+          if (error) console.error(error);
+          loadItems();
+        });
+      });
+
+      document.querySelectorAll('.edit-qty').forEach(input => {
+        input.addEventListener('change', async () => {
+          const id = input.dataset.id;
+          const newQty = Number(input.value);
+          if (isNaN(newQty) || newQty < 0) return alert("Quantité invalide.");
+          const { error } = await supabaseClient.from('items').update({ qty: newQty }).eq('id', id);
+          if (error) console.error(error);
+          loadItems();
+        });
+      });
+    }
+
+    addBtn.addEventListener('click', async () => {
+      const name = nameInput.value.trim();
+      const price = Number(priceInput.value);
+      const qty = Number(qtyInput.value);
+      if (!name || isNaN(price) || isNaN(qty)) return alert("Remplis tous les champs correctement.");
+      const { error } = await supabaseClient.from('items').insert([{ name, price, qty }]);
+      if (error) { alert("Erreur ajout : " + error.message); console.error(error); return; }
+      nameInput.value = ''; priceInput.value = ''; qtyInput.value = '';
+      loadItems();
+    });
+
+    loadItems();
+  </script>
+</body>
+</html>
