@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Magasin — Famille BELTRAN LEYVA</title>
+<style>
+:root{
+  --khaki:#7b7f4a; 
+  --beige:#efe6d6;
+  --dark:#1f2318;
+  --muted:#9a9a85;
+  --accent:#6b6f3f;
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+}
+body{background:linear-gradient(180deg,var(--beige),#f7f4ee);color:var(--dark);margin:0;padding:24px}
+.container{max-width:1100px;margin:0 auto}
+header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.brand{display:flex;gap:12px;align-items:center}
+.logo{width:58px;height:58px;border-radius:8px;background:var(--khaki);display:flex;align-items:center;justify-content:center;color:var(--beige);font-weight:700;font-size:20px}
+h1{margin:0;font-size:20px}
+.desc{color:var(--muted);font-size:13px}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+.card{background:linear-gradient(180deg,white, #fbf9f5);border-radius:12px;padding:12px;box-shadow:0 6px 18px rgba(0,0,0,0.06);display:flex;flex-direction:column;gap:10px;cursor:pointer;position:relative}
+.thumb{height:140px;border-radius:8px;overflow:hidden;background:#f0efe8;display:flex;align-items:center;justify-content:center}
+.thumb img{max-width:100%;max-height:100%;object-fit:contain}
+.meta{display:flex;justify-content:space-between;align-items:center}
+.name{font-weight:700}
+.price{font-weight:700;color:var(--khaki)}
+.dur{font-size:13px;color:var(--muted)}
+
+.btn{padding:8px 12px;border-radius:8px;border:0;cursor:pointer;font-weight:600}
+.btn-reserve{background:var(--khaki);color:var(--beige)}
+.btn-disabled{background:#ddd;color:#777;cursor:not-allowed}
+
+.reserved{opacity:0.5;filter:grayscale(40%);position:relative}
+.reserved::after{content:'RÉSERVÉ';position:absolute;right:10px;top:10px;background:#222;color:var(--beige);padding:6px 10px;border-radius:6px;font-size:12px;font-weight:700}
+
+.admin-panel{margin-top:22px;background:#fff9f2;padding:12px;border-radius:10px;border:1px solid rgba(0,0,0,0.04)}
+.flex{display:flex;gap:8px;align-items:center}
+input,select,textarea{padding:8px;border-radius:8px;border:1px solid #e0ddd5;font-size:14px}
+form .row{display:flex;gap:8px}
+footer{margin-top:26px;color:var(--muted);font-size:13px}
+
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.35);display:flex;align-items:center;justify-content:center}
+.modal{background:white;padding:16px;border-radius:10px;max-width:420px;width:100%}
+
+@media (max-width:600px){.brand h1{font-size:16px}.thumb{height:110px}}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div class="container">
+<header>
+  <div class="brand">
+    <div class="logo">B-L</div>
+    <div>
+      <h1>Marché — Famille BELTRAN LEYVA</h1>
+      <div class="desc">Vitrine du marché de la famille Beltran Leyva</div>
+    </div>
+  </div>
+  <div class="flex">
+    <button id="btn-login" class="btn">Connexion admin</button>
+    <button id="btn-open-admin" class="btn" style="display:none;background:transparent;border:1px solid var(--khaki);color:var(--khaki)">Ouvrir panel admin</button>
+  </div>
+</header>
+
+<main>
+  <section id="items-section">
+    <div class="grid" id="items-grid"></div>
+  </section>
+
+  <section class="admin-panel" id="admin-panel" style="display:none">
+    <h3>Administration</h3>
+    <div style="margin-bottom:10px">Ajouter / supprimer articles et gérer réservations.</div>
+
+    <details open>
+      <summary style="font-weight:700;margin-bottom:8px">Ajouter un article</summary>
+      <form id="add-item-form" style="margin-top:8px;display:flex;flex-direction:column;gap:8px">
+        <input id="w-name" placeholder="Nom de l'article" required />
+        <input id="w-image" placeholder="URL image" />
+        <div class="row">
+          <input id="w-dur" placeholder="Durabilité (0-100)" type="number" min="0" max="100" />
+          <input id="w-base-price" placeholder="Prix de base" type="number" />
+          <input id="w-final-price" placeholder="Prix final" type="number" />
+        </div>
+        <input id="w-description" placeholder="Description / Échange possible (ex: Toris MK2 + reste en argent)" />
+        <div class="flex" style="justify-content:flex-end">
+          <button type="submit" class="btn" style="background:var(--accent);color:var(--beige)">Ajouter</button>
+        </div>
+      </form>
+    </details>
+
+    <details style="margin-top:10px">
+      <summary style="font-weight:700">Réservations en cours</summary>
+      <div id="reservations-list" style="margin-top:8px"></div>
+    </details>
+
+    <details style="margin-top:10px">
+      <summary style="font-weight:700">Supprimer un article</summary>
+      <div id="delete-items-list" style="margin-top:8px"></div>
+    </details>
+
+    <div style="margin-top:12px">
+      <button id="btn-logout" class="btn" style="background:#e27b7b;color:white">Se déconnecter</button>
+    </div>
+  </section>
+
+  <footer><small>Design & fonctionnalité : BELTRAN LEYVA • Theta_Robin</small></footer>
+</main>
+</div>
+
+<div id="modal-root" style="display:none"></div>
+
+<script>
+/* ====== CONFIG SUPABASE ====== */
+const SUPABASE_URL = 'https://ldhxyloqdtplevdkgnah.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxkaHh5bG9xZHRwbGV2ZGtnbmFoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEyMTg5NjAsImV4cCI6MjA3Njc5NDk2MH0.pnoppZtVEP3uDrMEfauPAMMB93EmGO5Ur1pg4OY99-o';
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+/* ====== UTIL ====== */
+function moneyFormat(n){ return Number(n).toLocaleString('fr-FR') + ' $'; }
+function showModal(content){ 
+  const root=document.getElementById('modal-root');
+  root.style.display='flex';
+  root.innerHTML=`<div class="modal-backdrop" onclick="hideModal()">
+    <div class="modal" onclick="event.stopPropagation()">${content}</div>
+  </div>`;
+}
+function hideModal(){ document.getElementById('modal-root').style.display='none'; }
+
+/* ====== CHANGER ICI : le nom de la table utilisée ====== */
+const TABLE_NAME = 'marche';
+
+/* ====== CHARGER LES ARTICLES DU MARCHÉ ====== */
+async function loadItems(){
+  const grid=document.getElementById('items-grid');
+  grid.innerHTML='';
+  const { data,error } = await supabaseClient.from(TABLE_NAME).select('*').order('id');
+  if(error){ console.error(error); grid.innerHTML='<div>Erreur chargement articles</div>'; return; }
+  if(!data || data.length===0){ grid.innerHTML='<div>Aucun article trouvé.</div>'; return; }
+
+  data.forEach(w=>{
+    const card=document.createElement('div');
+    card.className='card'+(w.status==='reserved'?' reserved':'');
+    const price=w.final_price??w.base_price??0;
+    card.innerHTML=`
+      <div class="thumb"><img src="${w.image_url||'https://via.placeholder.com/320x180?text=Article'}" alt="${w.name}" /></div>
+      <div class="meta">
+        <div class="name">${w.name}</div>
+        <div class="price">${moneyFormat(price)}</div>
+      </div>
+      <div class="dur">Durabilité: ${w.durability??0}%</div>
+      ${w.description ? `<div class="dur" style="color:#6b6f3f;font-style:italic;">Description: ${w.description}</div>` : ''}
+    `;
+    
+    if(w.status==='available'){
+      card.addEventListener('click', ()=>{
+        showModal(`
+          <h3>Réserver : ${w.name}</h3>
+          ${w.description ? `<div style="margin-bottom:8px;font-style:italic;color:#6b6f3f;">Description: ${w.description}</div>` : ''}
+          <form id="reserve-form">
+            <input id="player_name" placeholder="Nom" required /><br/>
+            <input id="player_firstname" placeholder="Prénom" required /><br/>
+            <input id="player_phone" placeholder="Téléphone" required /><br/>
+            <input id="reserve_description" placeholder="Description ou note (optionnel)" /><br/>
+            <button type="submit" class="btn btn-reserve">Réserver</button>
+          </form>
+        `);
+
+        document.getElementById('reserve-form').addEventListener('submit', async e=>{
+          e.preventDefault();
+          const player_name=document.getElementById('player_name').value;
+          const player_firstname=document.getElementById('player_firstname').value;
+          const player_phone=document.getElementById('player_phone').value;
+          const descriptionUpdate = document.getElementById('reserve_description').value || null;
+          const { error:updateError } = await supabaseClient
+            .from(TABLE_NAME)
+            .update({status:'reserved',player_name,player_firstname,player_phone, description: descriptionUpdate})
+            .eq('id',w.id);
+          if(updateError){ alert('Erreur réservation: '+updateError.message); return; }
+          hideModal(); loadItems(); loadReservations(); loadDeleteList();
+        });
+      });
+    }
+    grid.appendChild(card);
+  });
+}
+
+/* ====== ADMIN: réservations ====== */
+async function loadReservations(){
+  const container=document.getElementById('reservations-list');
+  const { data,error } = await supabaseClient.from(TABLE_NAME).select('*').order('id');
+  if(error){ container.innerHTML='Erreur chargement réservations'; return; }
+  container.innerHTML='';
+  data.filter(w=>w.status==='reserved').forEach(w=>{
+    const div=document.createElement('div');
+    div.innerHTML=`${w.name} — ${w.player_name||''} ${w.player_firstname||''} (${w.player_phone||''}) 
+    ${w.description ? `<span style="margin-left:8px;color:#6b6f3f;font-style:italic">(${w.description})</span>` : ''}
+    <button class="btn" style="background:#e27b7b;color:white;margin-left:5px" onclick="cancelReservation(${w.id})">Annuler</button>`;
+    container.appendChild(div);
+  });
+}
+
+async function cancelReservation(id){
+  const { error } = await supabaseClient.from(TABLE_NAME)
+    .update({status:'available',player_name:null,player_firstname:null,player_phone:null})
+    .eq('id',id);
+  if(error){ alert('Erreur annulation: '+error.message); return; }
+  loadItems(); loadReservations(); loadDeleteList();
+}
+
+/* ====== ADMIN: suppression ====== */
+async function loadDeleteList(){
+  const container=document.getElementById('delete-items-list');
+  const { data,error } = await supabaseClient.from(TABLE_NAME).select('*').order('id');
+  if(error){ container.innerHTML='Erreur chargement'; return; }
+  container.innerHTML='';
+  data.forEach(w=>{
+    const div=document.createElement('div');
+    div.innerHTML=`${w.name} 
+      <button class="btn" style="background:#e27b7b;color:white;margin-left:5px" onclick="deleteItem(${w.id})">Supprimer</button>`;
+    container.appendChild(div);
+  });
+}
+
+async function deleteItem(id){
+  if(!confirm('Supprimer cet article ?')) return;
+  const { error } = await supabaseClient.from(TABLE_NAME).delete().eq('id',id);
+  if(error){ alert('Erreur suppression: '+error.message); return; }
+  loadItems(); loadReservations(); loadDeleteList();
+}
+
+/* ====== AJOUTER UN ARTICLE ====== */
+document.getElementById('add-item-form').addEventListener('submit', async e=>{
+  e.preventDefault();
+  const name=document.getElementById('w-name').value;
+  const image_url=document.getElementById('w-image').value;
+  const durability=parseInt(document.getElementById('w-dur').value)||0;
+  const base_price=parseFloat(document.getElementById('w-base-price').value)||0;
+  const final_price=parseFloat(document.getElementById('w-final-price').value)||base_price;
+  const description = document.getElementById('w-description').value || null;
+  const { error } = await supabaseClient.from(TABLE_NAME).insert([{
+    name,image_url,durability,base_price,final_price,status:'available',description
+  }]);
+  if(error){ alert('Erreur ajout: '+error.message); return; }
+  e.target.reset(); loadItems(); loadDeleteList();
+});
+
+/* ====== AUTH ADMIN (simple, via Supabase Auth) ====== */
+document.getElementById('btn-login').addEventListener('click', async ()=>{
+  const email = prompt('Email admin:');
+  const password = prompt('Mot de passe:');
+  if(!email || !password) return alert('Email et mot de passe requis');
+  const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+  if(error){ alert('Erreur connexion: '+error.message); return; }
+  document.getElementById('admin-panel').style.display='block';
+  document.getElementById('btn-open-admin').style.display='inline-block';
+  loadReservations(); loadDeleteList();
+});
+
+/* Ouvrir panel admin */
+document.getElementById('btn-open-admin').addEventListener('click', ()=>document.getElementById('admin-panel').style.display='block');
+
+/* Déconnexion */
+document.getElementById('btn-logout').addEventListener('click', async ()=>{
+  await supabaseClient.auth.signOut();
+  document.getElementById('admin-panel').style.display='none';
+  document.getElementById('btn-open-admin').style.display='none';
+});
+
+/* LANCEMENT */
+loadItems();
+</script>
+</body>
+</html>
