@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Gestion des Membres et Armes</title>
+<style>
+body { font-family: Arial, sans-serif; padding: 20px; background: #f4f4f4; }
+h1, h2 { margin-bottom: 10px; }
+.legend { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
+.legend-item { padding: 5px 10px; border-radius: 3px; color: #fff; font-weight: bold; }
+.role-1 { background-color: #e74c3c; } .role-2 { background-color: #c0392b; }
+.role-3 { background-color: #3498db; } .role-4 { background-color: #2ecc71; }
+.role-5 { background-color: #16a085; } .role-6 { background-color: #9b59b6; }
+.role-7 { background-color: #f39c12; } .role-8 { background-color: #95a5a6; }
+table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+th, td { border: 1px solid #ddd; padding: 8px; vertical-align: top; text-align: left; }
+th { background-color: #3498db; color: white; }
+select { width: 200px; }
+button { padding: 5px 10px; margin-left: 5px; }
+</style>
+</head>
+<body>
+
+<h1>Gestion des Membres et Armes</h1>
+<button style="padding:10px 20px; background-color:#3498db; color:white; border:none; border-radius:5px; cursor:pointer;" onclick="window.location.href='index.html'">Retour</button>
+
+<h2>Légende des rôles :</h2>
+<div class="legend">
+    <div class="legend-item role-1">Leader</div>
+    <div class="legend-item role-2">Co-leader</div>
+    <div class="legend-item role-3">Grad</div>
+    <div class="legend-item role-4">Gérant RH</div>
+    <div class="legend-item role-5">Gérant armes</div>
+    <div class="legend-item role-6">Gérant drogue</div>
+    <div class="legend-item role-7">Soldat</div>
+    <div class="legend-item role-8">Recru</div>
+</div>
+
+<table id="membersTable">
+    <thead>
+        <tr>
+            <th>Membre</th>
+            <th>Armes</th>
+            <th>Donné</th>
+            <th>Rendu</th>
+            <th>Jour</th>
+        </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+const SUPABASE_URL = "https://ldhxyloqdtplevdkgnah.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxkaHh5bG9xZHRwbGV2ZGtnbmFoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEyMTg5NjAsImV4cCI6MjA3Njc5NDk2MH0.pnoppZtVEP3uDrMEfauPAMMB93EmGO5Ur1pg4OY99-o"; // Remplace par ta clé ANON valide
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const armesList = [
+    "Beretta MK2", "AKU", "Mini SMG", "Micro SMG",
+    "SMG Tactic", "Double Action", "Fusil d'assaut",
+    "Pistolet lourd"
+];
+
+async function fetchDistributions() {
+    const { data, error } = await supabase.from('distributions').select('*');
+    if(error){ console.error(error); return []; }
+    return data;
+}
+
+async function fetchMembers() {
+    const { data: members, error } = await supabase
+        .from('membres')
+        .select(`id, prenom, role_id, roles(nom)`);
+    if(error){ console.error(error); return; }
+
+    const distributions = await fetchDistributions();
+    const tbody = document.querySelector("#membersTable tbody");
+    tbody.innerHTML = '';
+
+    const today = new Date().toISOString().split('T')[0];
+
+    members.forEach(member => {
+        const tr = document.createElement('tr');
+
+        // Nom
+        const tdName = document.createElement('td');
+        tdName.textContent = member.prenom;
+        tdName.className = `role-${member.role_id}`;
+        tr.appendChild(tdName);
+
+        // Sélecteur d'armes
+        const tdArmes = document.createElement('td');
+        const selectArmes = document.createElement('select');
+        selectArmes.multiple = true;
+        armesList.forEach(a => {
+            const opt = document.createElement('option'); 
+            opt.value = a; 
+            opt.textContent = a;
+            selectArmes.appendChild(opt);
+        });
+        tdArmes.appendChild(selectArmes);
+        tr.appendChild(tdArmes);
+
+        // Bouton donné
+        const tdDonne = document.createElement('td');
+        const btnDonne = document.createElement('button');
+        btnDonne.textContent = 'Donné';
+        tdDonne.appendChild(btnDonne);
+        tr.appendChild(tdDonne);
+
+        // Case rendu
+        const tdRendu = document.createElement('td');
+        const chkRendu = document.createElement('input');
+        chkRendu.type = 'checkbox';
+        tdRendu.appendChild(chkRendu);
+        tr.appendChild(tdRendu);
+
+        // Jour
+        const tdJour = document.createElement('td');
+        tr.appendChild(tdJour);
+
+        // Charger les distributions existantes
+        const memberDistributions = distributions.filter(d => d.member_id === member.id);
+        if(memberDistributions.length > 0){
+            tdJour.textContent = memberDistributions.map(d => d.arme + ' (' + d.date + ')').join(', ');
+        }
+
+        // Fonctions
+        async function donnerArmes() {
+            const selectedArmes = Array.from(selectArmes.selectedOptions).map(o => o.value);
+            if(selectedArmes.length === 0) return;
+            tdJour.textContent = selectedArmes.map(a => a + ' (' + today + ')').join(', ');
+
+            for(const arme of selectedArmes){
+                await supabase.from('distributions').upsert({
+                    member_id: member.id,
+                    arme: arme,
+                    date: today
+                }, { onConflict: ['member_id', 'arme', 'date'] });
+            }
+        }
+
+        async function rendreArmes() {
+            tdJour.textContent = '';
+            Array.from(selectArmes.options).forEach(opt => opt.selected = false);
+            await supabase.from('distributions')
+                .delete()
+                .eq('member_id', member.id)
+                .eq('date', today);
+        }
+
+        btnDonne.addEventListener('click', donnerArmes);
+        chkRendu.addEventListener('change', () => {
+            if(chkRendu.checked){
+                rendreArmes();
+                chkRendu.checked = false;
+            }
+        });
+
+        tbody.appendChild(tr);
+    });
+}
+
+fetchMembers();
+</script>
+
+</body>
+</html>
