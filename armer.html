@@ -139,6 +139,7 @@ async function fetchMembers() {
                     date: today
                 }, { onConflict: ['member_id', 'arme', 'date'] });
             }
+            // pas de fetch ici — on compte sur le realtime pour rafraîchir l'affichage
         }
 
         async function rendreArmes() {
@@ -148,6 +149,7 @@ async function fetchMembers() {
                 .delete()
                 .eq('member_id', member.id)
                 .eq('date', today);
+            // idem : le listener realtime gérera la mise à jour visible
         }
 
         btnDonne.addEventListener('click', donnerArmes);
@@ -162,9 +164,46 @@ async function fetchMembers() {
     });
 }
 
+// initial load
 fetchMembers();
+
+// === SUBSCRIPTIONS REALTIME ===
+// On écoute insert/update/delete sur distributions et aussi sur membres si tu modifies la liste
+const channel = supabase.channel('realtime-membres-distributions');
+
+// Événements sur la table distributions
+channel.on('postgres_changes',
+    { event: '*', schema: 'public', table: 'distributions' },
+    payload => {
+        console.log('Realtime distributions event:', payload);
+        // solution simple : recharger toute la liste (facile et fiable)
+        fetchMembers();
+    }
+);
+
+// Événements sur la table membres (si besoin)
+channel.on('postgres_changes',
+    { event: '*', schema: 'public', table: 'membres' },
+    payload => {
+        console.log('Realtime membres event:', payload);
+        fetchMembers();
+    }
+);
+
+// s'abonner
+channel.subscribe(status => {
+    if (status === 'SUBSCRIBED') {
+        console.log('Abonné aux changements realtime Supabase ✅');
+    } else {
+        console.log('Statut abonnement realtime:', status);
+    }
+});
+
+// nettoyer l'abonnement quand l'onglet est fermé
+window.addEventListener('beforeunload', () => {
+    channel.unsubscribe();
+});
 </script>
 
 </body>
 </html>
-
