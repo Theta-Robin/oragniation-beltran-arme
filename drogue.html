@@ -1,0 +1,436 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>GTA RP  - Suivi des ventes — Visualisations De La Famille Beltran</title>
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Chart.js pour les graphiques -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    :root{
+      --bg:#0f1724;--card:#0b1220;--accent:#16a34a;--muted:#94a3b8;--glass:rgba(255,255,255,0.03);
+      --text:#e6eef8;
+    }
+    .light {
+      --bg: #f7fafc;
+      --card: #ffffff;
+      --accent: #0b7a4a;
+      --muted: #475569;
+      --glass: rgba(2,6,23,0.03);
+      --text: #071827;
+    }
+
+    *{box-sizing:border-box}
+    body{font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; margin:0; padding:18px; background:linear-gradient(180deg,var(--bg) 0%, #071827 100%); color:var(--text)}
+    .container{max-width:1200px;margin:0 auto}
+    h1{margin:0 0 12px;font-size:20px}
+    .grid{display:grid;grid-template-columns:1fr 420px;gap:18px}
+    .card{background:var(--card);border-radius:10px;padding:14px;box-shadow:0 6px 18px rgba(2,6,23,0.4)}
+    label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+    input[type=text], input[type=date], input[type=number], select{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:var(--glass);color:var(--text)}
+    .row{display:flex;gap:8px}
+    .row > *{flex:1}
+    button{background:var(--accent);color:#021018;border:0;padding:10px 12px;border-radius:8px;font-weight:600;cursor:pointer}
+    button.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted)}
+    table{width:100%;border-collapse:collapse;margin-top:12px}
+    th,td{padding:8px 6px;text-align:left;border-bottom:1px dashed rgba(255,255,255,0.03);font-size:13px}
+    th{color:var(--muted);font-weight:600}
+    .totals{margin-top:12px}
+    .player-list{max-height:300px;overflow:auto;margin-top:8px}
+    .small{font-size:12px;color:var(--muted)}
+    .danger{background:#b91c1c;color:white}
+    .flex-between{display:flex;justify-content:space-between;align-items:center}
+    .hidden{display:none}
+    .search-row{display:flex;gap:8px;margin-top:12px}
+    #personSelect { background: #ffffff; color: #021018; border: 1px solid rgba(0,0,0,0.06); }
+    #personSelect option { color: #021018; background: #ffffff; }
+
+    .toolbar{display:flex;gap:8px;align-items:center}
+    .spinner{display:inline-block;width:18px;height:18px;border:2px solid rgba(255,255,255,0.08);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    .charts{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+    .chart-card{padding:10px;border-radius:8px;background:linear-gradient(90deg, rgba(255,255,255,0.01), transparent)}
+
+    @media (max-width:1000px){.grid{grid-template-columns:1fr}.charts{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div class="container" id="root">
+    <h1>GTA RP — Suivi des ventes (Visualisations & test style)</h1>
+
+    <div class="toolbar" style="margin-bottom:10px">
+      <div class="small">Thème :</div>
+      <button id="toggleTheme" class="ghost" type="button">Basculer thème</button>
+      <div style="flex:1"></div>
+      <div id="loading" class="small hidden"><span class="spinner"></span> Chargement...</div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <form id="entryForm">
+          <div style="display:flex;gap:8px;align-items:end;flex-wrap:wrap">
+            <div style="flex:1;min-width:160px">
+              <label>Personne</label>
+              <select id="personSelect" aria-label="Sélectionner une personne"></select>
+            </div>
+
+            <div id="manualName" style="flex:1;min-width:160px" class="hidden">
+              <label>Nom (nouveau)</label>
+              <input id="nom" type="text" placeholder="Ex: Robin" />
+            </div>
+            <div id="manualPrenom" style="flex:1;min-width:160px" class="hidden">
+              <label>Prénom (nouveau)</label>
+              <input id="prenom" type="text" placeholder="Ex: Dupont" />
+            </div>
+
+            <div style="min-width:160px">
+              <label>Date</label>
+              <input id="date" type="date" required />
+            </div>
+          </div>
+
+          <div style="display:flex;gap:8px;margin-top:10px;align-items:end;flex-wrap:wrap">
+            <div style="flex:1">
+              <label>Nombre de pochons vendus</label>
+              <input id="pochons" type="number" min="0" step="1" value="0" required />
+            </div>
+            <div style="flex:1">
+              <label>Argent généré ($)</label>
+              <input id="argent" type="number" min="0" step="0.01" value="0" required />
+            </div>
+            <div style="width:120px">
+              <button id="addBtn" type="submit">Ajouter</button>
+            </div>
+            <div style="width:220px">
+              <button id="addAllBtn" type="button">Ajouter tous les membres</button>
+            </div>
+          </div>
+        </form>
+
+        <div style="margin-top:12px" class="flex-between">
+          <div class="small">Données : Supabase</div>
+          <div>
+            <button id="exportBtn" class="ghost">Exporter CSV</button>
+            <button id="resetBtn" class="danger small">Réinitialiser la semaine</button>
+          </div>
+        </div>
+
+        <div class="search-row" style="margin-top:12px">
+          <input id="searchName" type="text" placeholder="Rechercher un joueur ou filtrer (nom/prénom)..." />
+          <input id="dateFrom" type="date" />
+          <input id="dateTo" type="date" />
+          <button id="applyFilter" class="ghost" type="button">Filtrer</button>
+          <button id="clearSearch" class="ghost" type="button">Effacer</button>
+        </div>
+
+        <table id="entriesTable" aria-label="Liste des entrées">
+          <thead>
+            <tr><th>Date</th><th>Nom</th><th>Prénom</th><th>Pochons</th><th>Argent ($)</th><th></th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+
+        <div class="charts">
+          <div class="chart-card card">
+            <div class="flex-between"><strong>$ / jour</strong><div><button id="downloadChart1" class="ghost">PNG</button></div></div>
+            <canvas id="chartSales" height="180"></canvas>
+          </div>
+
+          <div class="chart-card card">
+            <div class="flex-between"><strong>Top joueurs ($)</strong><div><button id="downloadChart2" class="ghost">PNG</button></div></div>
+            <canvas id="chartTop" height="180"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="flex-between"><strong>Totaux par joueur</strong><span class="small">Mise à jour automatique</span></div>
+        <div id="players" class="player-list" style="margin-top:8px"></div>
+
+        <div class="totals">
+          <table>
+            <tbody>
+              <tr><th>Total général (pochons)</th><td id="totalPochons">0</td></tr>
+              <tr><th>Total général ($)</th><td id="totalArgent">0.00</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <hr style="border:none;border-top:1px dashed rgba(255,255,255,0.04);margin:12px 0" />
+        <div class="small">Conseils : utilise la plage de date pour créer des rapports hebdo/mensuels. Tu peux exporter les graphiques PNG pour archives.</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://ldhxyloqdtplevdkgnah.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxkaHh5bG9xZHRwbGV2ZGtnbmFoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEyMTg5NjAsImV4cCI6MjA3Njc5NDk2MH0.pnoppZtVEP3uDrMEfauPAMMB93EmGO5Ur1pg4OY99-o';
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    const form = document.getElementById('entryForm');
+    const personSelect = document.getElementById('personSelect');
+    const manualNameDiv = document.getElementById('manualName');
+    const manualPrenomDiv = document.getElementById('manualPrenom');
+    const nomInput = document.getElementById('nom');
+    const prenomInput = document.getElementById('prenom');
+    const dateInput = document.getElementById('date');
+    const pochonsInput = document.getElementById('pochons');
+    const argentInput = document.getElementById('argent');
+    const entriesTableBody = document.querySelector('#entriesTable tbody');
+    const playersDiv = document.getElementById('players');
+    const totalPochonsEl = document.getElementById('totalPochons');
+    const totalArgentEl = document.getElementById('totalArgent');
+    const resetBtn = document.getElementById('resetBtn');
+    const exportBtn = document.getElementById('exportBtn');
+    const searchNameInput = document.getElementById('searchName');
+    const clearSearchBtn = document.getElementById('clearSearch');
+    const dateFromInput = document.getElementById('dateFrom');
+    const dateToInput = document.getElementById('dateTo');
+    const applyFilterBtn = document.getElementById('applyFilter');
+    const loadingEl = document.getElementById('loading');
+    const toggleThemeBtn = document.getElementById('toggleTheme');
+    const downloadChart1 = document.getElementById('downloadChart1');
+    const downloadChart2 = document.getElementById('downloadChart2');
+    const addAllBtn = document.getElementById('addAllBtn');
+
+    let chartSales = null;
+    let chartTop = null;
+
+    dateInput.value = new Date().toISOString().slice(0,10);
+
+    form.addEventListener('submit', async (e) => { e.preventDefault(); await addEntry(); });
+    resetBtn.addEventListener('click', async () => {
+      if(confirm('Tu veux vraiment réinitialiser la semaine ? Toutes les entrées seront supprimées.')){
+        showLoading(true);
+        await supabase.from('ventes_jtrp').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+        await populatePersonSelect();
+        await loadEntries();
+        showLoading(false);
+      }
+    });
+
+    exportBtn.addEventListener('click', async () => {
+      showLoading(true);
+      const { data } = await supabase.from('ventes_jtrp').select('*');
+      const csv = toCSV(data);
+      const blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'jtrp_ventes.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+      showLoading(false);
+    });
+
+    personSelect.addEventListener('change', () => {
+      const v = personSelect.value;
+      if(v === '__new__'){
+        manualNameDiv.classList.remove('hidden');
+        manualPrenomDiv.classList.remove('hidden');
+        nomInput.required = true;
+      } else {
+        manualNameDiv.classList.add('hidden');
+        manualPrenomDiv.classList.add('hidden');
+        nomInput.required = false;
+      }
+      searchNameInput.value = v === '__all__' ? '' : v.replace('|', ' ');
+      loadEntries();
+    });
+
+    searchNameInput.addEventListener('input', debounce(() => loadEntries(), 250));
+    clearSearchBtn.addEventListener('click', () => { searchNameInput.value=''; personSelect.value='__all__'; dateFromInput.value=''; dateToInput.value=''; loadEntries(); });
+    applyFilterBtn.addEventListener('click', () => loadEntries());
+
+    toggleThemeBtn.addEventListener('click', () => { document.getElementById('root').classList.toggle('light'); });
+
+    downloadChart1.addEventListener('click', () => { if(chartSales) downloadCanvas(chartSales.canvas, 'sales.png'); });
+    downloadChart2.addEventListener('click', () => { if(chartTop) downloadCanvas(chartTop.canvas, 'top_players.png'); });
+
+    const allMembers = [
+  "Alexanders",
+  "Fabio",
+  "Kanan",
+  "Carlos",
+  "Mattio",
+  "Robin",
+  "Nuka",
+  "Yann",
+  "Festim",
+  "Enzo",
+  "Federico",
+  "Rico",
+  "Lorenzo",
+  "Leo",
+  "Alejandro",
+  "Antonio",
+  "Luciano",
+  "Mattia",
+  "Rick",
+  "Tomasso",
+  "Sergio",
+  "Tiziano"
+];
+
+    addAllBtn.addEventListener('click', async () => {
+      if(!confirm("Ajouter une entrée pour tous les membres listés ?")) return;
+
+      const date_vente = dateInput.value;
+      const pochons = parseInt(pochonsInput.value||0,10);
+      const argent = parseFloat(argentInput.value||0);
+
+      const inserts = allMembers.map(fullName=>{
+        const [nom, ...rest] = fullName.split(' ');
+        const prenom = rest.join(' ');
+        return { nom, prenom, date_vente, pochons, argent };
+      });
+
+      showLoading(true);
+      const { error } = await supabase.from('ventes_jtrp').insert(inserts);
+      showLoading(false);
+
+      if(error){ alert('Erreur lors de l\'ajout: '+error.message); }
+      else { await populatePersonSelect(); await loadEntries(); alert('Toutes les entrées ont été ajoutées avec succès !'); }
+    });
+
+    async function addEntry(){
+      let nom='', prenom='';
+      if(personSelect.value==='__new__'){
+        nom = (nomInput.value||'').trim();
+        prenom = (prenomInput.value||'').trim();
+      } else if(personSelect.value && personSelect.value!=='__all__'){
+        const parts = personSelect.value.split('|');
+        nom = parts[0]||'';
+        prenom = parts[1]||'';
+      } else { alert('Sélectionne une personne ou choisis "Ajouter nouveau..."'); return; }
+
+      const date_vente = dateInput.value;
+      const pochons = parseInt(pochonsInput.value||0,10);
+      const argent = parseFloat(argentInput.value||0);
+      if(!nom || !date_vente || isNaN(pochons) || isNaN(argent)){ alert('Remplis correctement tous les champs.'); return; }
+
+      showLoading(true);
+      const { error } = await supabase.from('ventes_jtrp').insert([{ nom, prenom, date_vente, pochons, argent }]);
+      showLoading(false);
+      if(error){ alert('Erreur: '+error.message); return; }
+
+      if(personSelect.value==='__new__'){ nomInput.value=''; prenomInput.value=''; personSelect.value='__all__'; manualNameDiv.classList.add('hidden'); manualPrenomDiv.classList.add('hidden'); }
+      pochonsInput.value='0'; argentInput.value='0'; dateInput.value = new Date().toISOString().slice(0,10);
+      await populatePersonSelect();
+      await loadEntries();
+      nomInput.focus();
+    }
+
+    async function loadEntries(){
+      showLoading(true);
+      let query = supabase.from('ventes_jtrp').select('*');
+
+      const filterName = searchNameInput.value.trim().toLowerCase();
+      const fromDate = dateFromInput.value;
+      const toDate = dateToInput.value;
+
+      // Filtre par personne sélectionnée
+      if(personSelect.value && personSelect.value !== '__all__' && personSelect.value !== '__new__'){
+        const [nom, prenom] = personSelect.value.split('|');
+        query = query.eq('nom', nom).eq('prenom', prenom);
+      }
+
+      // Filtre texte
+      if(filterName){
+        query = query.or(`nom.ilike.%${filterName}%,prenom.ilike.%${filterName}%`);
+      }
+
+      // Filtre par date
+      if(fromDate) query = query.gte('date_vente', fromDate);
+      if(toDate) query = query.lte('date_vente', toDate);
+
+      const { data, error } = await query.order('date_vente', { ascending: true });
+      showLoading(false);
+      if(error){ alert(error.message); return; }
+
+      entriesTableBody.innerHTML = '';
+      data.forEach(d=>{
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${d.date_vente}</td><td>${d.nom}</td><td>${d.prenom}</td><td>${d.pochons}</td><td>${d.argent.toFixed(2)}</td><td><button class="danger small" data-id="${d.id}">Suppr</button></td>`;
+        entriesTableBody.appendChild(tr);
+      });
+
+      entriesTableBody.querySelectorAll('button').forEach(btn=>{
+        btn.addEventListener('click', async ()=>{
+          if(confirm('Supprimer cette entrée ?')){
+            showLoading(true);
+            await supabase.from('ventes_jtrp').delete().eq('id', btn.dataset.id);
+            await loadEntries();
+            showLoading(false);
+          }
+        });
+      });
+
+      updateTotals(data);
+      updateCharts(data);
+    }
+
+    async function populatePersonSelect(){
+      const { data } = await supabase.from('ventes_jtrp').select('nom,prenom');
+      const persons = Array.from(new Set(data.map(d=>`${d.nom}|${d.prenom}`))).sort();
+      personSelect.innerHTML = '<option value="__all__">Tous</option><option value="__new__">Ajouter nouveau...</option>';
+      persons.forEach(p => { const o=document.createElement('option'); o.value=p; o.textContent=p.split('|').join(' '); personSelect.appendChild(o); });
+    }
+
+    function updateTotals(data){
+      const totalP = data.reduce((s,d)=>s+d.pochons,0);
+      const totalA = data.reduce((s,d)=>s+d.argent,0);
+      totalPochonsEl.textContent = totalP;
+      totalArgentEl.textContent = totalA.toFixed(2);
+
+      const byPlayer = {};
+      data.forEach(d=>{
+        const key = `${d.nom} ${d.prenom}`;
+        if(!byPlayer[key]) byPlayer[key] = {pochons:0, argent:0};
+        byPlayer[key].pochons+=d.pochons;
+        byPlayer[key].argent+=d.argent;
+      });
+      playersDiv.innerHTML = Object.entries(byPlayer).map(([k,v])=>`<div>${k}: ${v.pochons} pochons — $${v.argent.toFixed(2)}</div>`).join('');
+    }
+
+    function updateCharts(data){
+      const salesByDate = {};
+      data.forEach(d=>{ salesByDate[d.date_vente]=(salesByDate[d.date_vente]||0)+d.argent; });
+      const labels = Object.keys(salesByDate);
+      const values = Object.values(salesByDate);
+
+      if(chartSales) chartSales.destroy();
+      chartSales = new Chart(document.getElementById('chartSales').getContext('2d'),{
+        type:'bar',
+        data:{labels, datasets:[{label:'$ par jour',data:values,backgroundColor:'rgba(22,163,74,0.6)'}]},
+        options:{responsive:true,plugins:{legend:{display:false}}}
+      });
+
+      const topPlayers = {};
+      data.forEach(d=>{ const key=`${d.nom} ${d.prenom}`; topPlayers[key]=(topPlayers[key]||0)+d.argent; });
+      const topLabels = Object.keys(topPlayers);
+      const topValues = Object.values(topPlayers);
+
+      if(chartTop) chartTop.destroy();
+      chartTop = new Chart(document.getElementById('chartTop').getContext('2d'),{
+        type:'bar',
+        data:{labels:topLabels,datasets:[{label:'$ par joueur',data:topValues,backgroundColor:'rgba(22,163,74,0.6)'}]},
+        options:{responsive:true,plugins:{legend:{display:false}}}
+      });
+    }
+
+    function debounce(fn,ms){let timer;return function(...args){clearTimeout(timer);timer=setTimeout(()=>fn.apply(this,args),ms);};}
+    function toCSV(arr){if(!arr||!arr.length)return'';const keys=Object.keys(arr[0]);return [keys.join(','),...arr.map(o=>keys.map(k=>JSON.stringify(o[k]||'')).join(','))].join('\n');}
+    function showLoading(show){loadingEl.classList.toggle('hidden',!show);}
+    function downloadCanvas(canvas,name){ const a=document.createElement('a'); a.href=canvas.toDataURL(); a.download=name; a.click(); }
+
+    (async()=>{ await populatePersonSelect(); await loadEntries(); })();
+  </script>
+</body>
+</html>
+
