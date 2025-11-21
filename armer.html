@@ -16,7 +16,10 @@ table { width: 100%; border-collapse: collapse; margin-top: 10px; }
 th, td { border: 1px solid #ddd; padding: 8px; vertical-align: top; text-align: left; }
 th { background-color: #3498db; color: white; }
 select { width: 200px; }
-button { padding: 5px 10px; margin-left: 5px; }
+button { padding: 5px 10px; margin-left: 5px; cursor:pointer; }
+#addMemberForm { margin-top: 20px; background: white; padding: 12px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.06); display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+#addMemberForm input, #addMemberForm select { padding:6px 8px; border:1px solid #ccc; border-radius:4px; }
+.small { font-size:0.9em; color:#555; }
 </style>
 </head>
 <body>
@@ -36,6 +39,25 @@ button { padding: 5px 10px; margin-left: 5px; }
     <div class="legend-item role-8">Recru</div>
 </div>
 
+<!-- Formulaire pour ajouter un membre -->
+<form id="addMemberForm" onsubmit="event.preventDefault(); addMember();">
+  <label class="small">Prénom: <input id="newPrenom" required placeholder="Prénom"/></label>
+  <label class="small">Rôle:
+    <select id="newRole">
+      <option value="1">Leader</option>
+      <option value="2">Co-leader</option>
+      <option value="3">Grad</option>
+      <option value="4">Gérant RH</option>
+      <option value="5">Gérant armes</option>
+      <option value="6">Gérant drogue</option>
+      <option value="7">Soldat</option>
+      <option value="8">Recru</option>
+    </select>
+  </label>
+  <button type="submit" style="background-color:#2ecc71; color:white; border:none; border-radius:5px;">Ajouter membre</button>
+  <span id="addMemberMsg" class="small"></span>
+</form>
+
 <table id="membersTable">
     <thead>
         <tr>
@@ -53,7 +75,7 @@ button { padding: 5px 10px; margin-left: 5px; }
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
 const SUPABASE_URL = "https://ldhxyloqdtplevdkgnah.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxkaHh5bG9xZHRwbGV2ZGtnbmFoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEyMTg5NjAsImV4cCI6MjA3Njc5NDk2MH0.pnoppZtVEP3uDrMEfauPAMMB93EmGO5Ur1pg4OY99-o"; // Remplace par ta clé ANON valide
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxkaHh5bG9xZHRwbGV2ZGtnbmFoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEyMTg5NjAsImV4cCI6MjA3Njc5NDk2MH0.pnoppZtVEP3uDrMEfauPAMMB93EmGO5Ur1pg4OY99-o";
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const armesList = [
@@ -61,6 +83,29 @@ const armesList = [
     "SMG Tactic", "Double Action", "Fusil d'assaut",
     "Pistolet lourd","pompe","guse","tec-9"
 ];
+
+function formatDateToDisplay(isoString) {
+    if(!isoString) return '';
+    const d = new Date(isoString);
+    if (isNaN(d)) return isoString;
+    const dd = String(d.getDate()).padStart(2,'0');
+    const mm = String(d.getMonth()+1).padStart(2,'0');
+    const yyyy = d.getFullYear();
+    const hh = String(d.getHours()).padStart(2,'0');
+    const min = String(d.getMinutes()).padStart(2,'0');
+    return `${dd}/${mm}/${yyyy} ${hh}:${min}`;
+}
+
+function startOfDayISO(date = new Date()){
+    const s = new Date(date);
+    s.setHours(0,0,0,0);
+    return s.toISOString();
+}
+function endOfDayISO(date = new Date()){
+    const e = new Date(date);
+    e.setHours(23,59,59,999);
+    return new Date(e.getTime() + 1).toISOString(); // exclusive end
+}
 
 async function fetchDistributions() {
     const { data, error } = await supabase.from('distributions').select('*');
@@ -77,8 +122,6 @@ async function fetchMembers() {
     const distributions = await fetchDistributions();
     const tbody = document.querySelector("#membersTable tbody");
     tbody.innerHTML = '';
-
-    const today = new Date().toISOString().split('T')[0];
 
     members.forEach(member => {
         const tr = document.createElement('tr');
@@ -106,6 +149,10 @@ async function fetchMembers() {
         const tdDonne = document.createElement('td');
         const btnDonne = document.createElement('button');
         btnDonne.textContent = 'Donné';
+        btnDonne.style.backgroundColor = '#3498db';
+        btnDonne.style.color = 'white';
+        btnDonne.style.border = 'none';
+        btnDonne.style.borderRadius = '4px';
         tdDonne.appendChild(btnDonne);
         tr.appendChild(tdDonne);
 
@@ -120,36 +167,46 @@ async function fetchMembers() {
         const tdJour = document.createElement('td');
         tr.appendChild(tdJour);
 
-        // Charger les distributions existantes
+        // Charger les distributions existantes pour affichage (format jour mois année heure)
         const memberDistributions = distributions.filter(d => d.member_id === member.id);
         if(memberDistributions.length > 0){
-            tdJour.textContent = memberDistributions.map(d => d.arme + ' (' + d.date + ')').join(', ');
+            tdJour.textContent = memberDistributions.map(d => d.arme + ' (' + formatDateToDisplay(d.date) + ')').join(', ');
         }
 
         // Fonctions
         async function donnerArmes() {
             const selectedArmes = Array.from(selectArmes.selectedOptions).map(o => o.value);
             if(selectedArmes.length === 0) return;
-            tdJour.textContent = selectedArmes.map(a => a + ' (' + today + ')').join(', ');
+            const nowIso = new Date().toISOString();
+            tdJour.textContent = selectedArmes.map(a => a + ' (' + formatDateToDisplay(nowIso) + ')').join(', ');
 
             for(const arme of selectedArmes){
+                // on insert une ligne par arme avec timestamp ISO
                 await supabase.from('distributions').upsert({
                     member_id: member.id,
                     arme: arme,
-                    date: today
+                    date: nowIso
                 }, { onConflict: ['member_id', 'arme', 'date'] });
             }
-            // pas de fetch ici — on compte sur le realtime pour rafraîchir l'affichage
+            // recharger la table pour reflecter
+            fetchMembers();
         }
 
         async function rendreArmes() {
             tdJour.textContent = '';
             Array.from(selectArmes.options).forEach(opt => opt.selected = false);
-            await supabase.from('distributions')
+
+            // Supprimer toutes les distributions du membre pour la journée courante
+            const startIso = startOfDayISO();
+            const endIso = endOfDayISO();
+            const { error } = await supabase.from('distributions')
                 .delete()
                 .eq('member_id', member.id)
-                .eq('date', today);
-            // idem : le listener realtime gérera la mise à jour visible
+                .gte('date', startIso)
+                .lt('date', endIso);
+
+            if(error) console.error('Erreur suppression distributions:', error);
+            fetchMembers();
         }
 
         btnDonne.addEventListener('click', donnerArmes);
@@ -164,6 +221,23 @@ async function fetchMembers() {
     });
 }
 
+// Ajouter un membre via le formulaire
+async function addMember(){
+    const prenom = document.getElementById('newPrenom').value.trim();
+    const role_id = parseInt(document.getElementById('newRole').value, 10);
+    const msg = document.getElementById('addMemberMsg');
+    msg.textContent = '';
+    if(!prenom) { msg.textContent = 'Prénom requis'; return; }
+
+    const { data, error } = await supabase.from('membres').insert([{ prenom, role_id }]).select().single();
+    if(error){ console.error(error); msg.textContent = 'Erreur création'; return; }
+
+    document.getElementById('newPrenom').value = '';
+    msg.textContent = 'Membre ajouté ✅';
+    setTimeout(()=> msg.textContent = '', 2500);
+    fetchMembers();
+}
+
 // initial load
 fetchMembers();
 
@@ -176,7 +250,6 @@ channel.on('postgres_changes',
     { event: '*', schema: 'public', table: 'distributions' },
     payload => {
         console.log('Realtime distributions event:', payload);
-        // solution simple : recharger toute la liste (facile et fiable)
         fetchMembers();
     }
 );
