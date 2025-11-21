@@ -26,7 +26,7 @@
     text-shadow: 0 0 5px #0f0, 0 0 10px #0f0;
   }
 
-  #gameArea {
+   #gameArea {
     width: 400px;
     height: 400px;
     border: 2px solid #0f0;
@@ -38,10 +38,11 @@
     box-shadow: 0 0 20px #0f0 inset, 0 0 20px #0f0;
   }
 
+
+
   .box {
-    width: 50px;
-    height: 50px;
-    background-color: #0f0;
+    width: 80px;
+    height: 80px;
     position: absolute;
     cursor: pointer;
     border: 1px solid #0f0;
@@ -172,31 +173,53 @@ let timeLeft = 30;
 let gameActive = true;
 
 /* --------------------------- FONCTIONS JEU --------------------------- */
-function spawnBox() {
+function spawnBoxesPair() {
   if (!gameActive) return;
 
-  const box = document.createElement('div');
-  box.classList.add('box');
+  // Supprimer toutes les cases précédentes
+  document.querySelectorAll('.box').forEach(b => b.remove());
 
   const maxX = gameArea.clientWidth - 50;
   const maxY = gameArea.clientHeight - 50;
 
-  box.style.left = Math.random() * maxX + 'px';
-  box.style.top = Math.random() * maxY + 'px';
+  // CASE VERTE (BONNE)
+  const greenBox = document.createElement('div');
+  greenBox.classList.add('box');
+  greenBox.style.backgroundColor = '#0f0';
+  greenBox.style.left = Math.random() * maxX + 'px';
+  greenBox.style.top = Math.random() * maxY + 'px';
 
-  box.onclick = () => {
+  greenBox.onclick = () => {
     if (!gameActive) return;
     score++;
     scoreDisplay.textContent = 'Score : ' + score;
-    box.remove();
-    spawnBox();
+    spawnBoxesPair(); // spawn nouvelle paire après clic
   }
 
-  gameArea.appendChild(box);
+  // CASE ROUGE (MAUVAISE)
+  const redBox = document.createElement('div');
+  redBox.classList.add('box');
+  redBox.style.backgroundColor = '#f00';
+  redBox.style.left = Math.random() * maxX + 'px';
+  redBox.style.top = Math.random() * maxY + 'px';
 
-  setTimeout(() => {
-    if (gameArea.contains(box)) box.remove();
-  }, 2000);
+  redBox.onclick = () => {
+    if (!gameActive) return;
+    const malusType = Math.random();
+    if (malusType < 0.5) {
+      score = Math.max(0, score - 2);
+      alert('Malus ! -2 points');
+    } else {
+      timeLeft = Math.max(0, timeLeft - 5);
+      alert('Malus ! -5 secondes');
+    }
+    scoreDisplay.textContent = 'Score : ' + score;
+    timerDisplay.textContent = 'Temps restant : ' + timeLeft + 's';
+    spawnBoxesPair(); // spawn nouvelle paire après clic
+  }
+
+  gameArea.appendChild(greenBox);
+  gameArea.appendChild(redBox);
 }
 
 function startTimer() {
@@ -226,7 +249,7 @@ function resetGame() {
 
   document.querySelectorAll('.box').forEach(b => b.remove());
 
-  spawnBox();
+  spawnBoxesPair();
   startTimer();
 }
 
@@ -257,6 +280,11 @@ async function loadScores() {
   });
 }
 
+/* --------------------------- MISE A JOUR EN TEMPS RÉEL --------------------------- */
+setInterval(() => {
+  loadScores();
+}, 2000);
+
 /* --------------------------- FOND MATRIX --------------------------- */
 const matrix = document.getElementById('matrix');
 const chars = '01ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -275,11 +303,10 @@ for (let i = 0; i < 120; i++) {
 restartBtn.onclick = resetGame;
 
 /* --------------------------- LANCEMENT --------------------------- */
-spawnBox();
+spawnBoxesPair();
 startTimer();
 loadScores();
 
 </script>
 </body>
 </html>
-
