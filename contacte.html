@@ -5,21 +5,34 @@
 <title>Commandes & Contacts</title>
 <style>
     body { font-family: Arial, sans-serif; padding: 20px; background-color: #f4f4f4; }
-    h1 { text-align: center; margin-bottom: 40px; }
-    .container { display: flex; gap: 40px; }
+    h1 { text-align: center; margin-bottom: 20px; }
+    .top-bar { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:20px; }
+    .container { display: flex; gap: 40px; align-items:flex-start; }
     .column { flex: 1; background-color: #fff; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-radius: 8px; }
-    table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; vertical-align: middle; }
     th { background-color: #3498db; color: white; }
-    input[type="text"], input[type="number"], select, input[type="date"] { width: 100%; padding: 5px; box-sizing: border-box; }
-    button { padding: 6px 12px; background-color: #2ecc71; color: white; border: none; border-radius: 4px; cursor: pointer; }
-    button:hover { background-color: #27ae60; }
+    input[type="text"], input[type="number"], select, input[type="date"] { width: 100%; padding: 6px; box-sizing: border-box; border-radius:4px; border:1px solid #ccc; }
+    button { padding: 8px 12px; background-color: #2ecc71; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    button:hover { opacity:0.95; }
+    .btn-primary { background-color: #3498db; }
+    .btn-danger { background-color: #e74c3c; }
+    .actions button { margin-right:6px; }
+    .small { padding:6px 8px; font-size:0.9rem; }
 </style>
 </head>
 <body>
 
 <h1>Gestion Commandes & Contacts</h1>
-<button style="padding:10px 20px; background-color:#3498db; color:white; border:none; border-radius:5px; cursor:pointer;" onclick="window.location.href='index.html'">Retour</button>
+<div class="top-bar">
+  <div>
+    <button class="btn-primary small" style="background-color:#3498db; color:white; border:none; border-radius:5px; cursor:pointer;" onclick="window.location.href='index.html'">Retour</button>
+  </div>
+  <div style="display:flex; gap:8px;">
+    <button onclick="addOrderRow()" class="small">+ Ajouter commande</button>
+    <button onclick="addContactRow()" class="small">+ Ajouter contact</button>
+  </div>
+</div>
 
 <div class="container">
     <!-- Commandes -->
@@ -38,7 +51,6 @@
             </thead>
             <tbody></tbody>
         </table>
-        <button onclick="addOrderRow()">Ajouter une commande</button>
     </div>
 
     <!-- Contacts -->
@@ -52,6 +64,7 @@
                     <th>Co-lead</th>
                     <th>Gérant</th>
                     <th>Assistant</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody></tbody>
@@ -62,9 +75,9 @@
 <script type="module">
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-// Supabase
+// Supabase (remplace si nécessaire)
 const SUPABASE_URL = "https://ldhxyloqdtplevdkgnah.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxkaHh5bG9xZHRwbGV2ZGtnbmFoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEyMTg5NjAsImV4cCI6MjA3Njc5NDk2MH0.pnoppZtVEP3uDrMEfauPAMMB93EmGO5Ur1pg4OY99-o"; // <-- Remplace par ta clé
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxkaHh5bG9xZHRwbGV2ZGtnbmFoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEyMTg5NjAsImV4cCI6MjA3Njc5NDk2MH0.pnoppZtVEP3uDrMEfauPAMMB93EmGO5Ur1pg4OY99-o";
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // Liste des armes disponibles
@@ -72,14 +85,14 @@ const armesDisponibles = ["AK-47","TEC-9","Canon Scié","SNS","Double Action","M
 
 // --- Code couleur quantité ---
 function getQuantityColor(quantity) {
-    if(quantity <= 0) return 'red';
-    if(quantity <= 5) return 'orange';
-    return 'green';
+    if(quantity <= 0) return 'lightcoral';
+    if(quantity <= 5) return 'lightyellow';
+    return 'lightgreen';
 }
 
-// --- Commandes ---
+// ----------------- COMMANDES -----------------
 async function fetchOrders() {
-    const { data, error } = await supabase.from('orders').select('*');
+    const { data, error } = await supabase.from('orders').select('*').order('id', { ascending: false });
     if(error){ console.error(error); return; }
 
     const tbody = document.querySelector("#ordersTable tbody");
@@ -87,19 +100,21 @@ async function fetchOrders() {
     data.forEach(order => {
         const tr = document.createElement('tr');
 
-        // couleur de la quantité
         const quantityColor = getQuantityColor(order.quantity);
-        const deliveredBg = order.delivered ? '#d4edda' : '#f8d7da'; // vert clair / rouge clair
+        const deliveredBg = order.delivered ? '#d4edda' : '#f8d7da';
 
         tr.innerHTML = `
-            <td><input type="text" value="${order.group}" /></td>
+            <td><input type="text" value="${escapeHtml(order.group || '')}" /></td>
             <td>
-                <select>${armesDisponibles.map(a => `<option value="${a}" ${a===order.weapon?'selected':''}>${a}</option>`)}</select>
+                <select>${armesDisponibles.map(a => `<option value="${a}" ${a===order.weapon?'selected':''}>${a}</option>`).join('')}</select>
             </td>
-            <td style="background-color:${quantityColor};"><input type="number" value="${order.quantity}" /></td>
-            <td style="background-color:${deliveredBg};"><input type="checkbox" ${order.delivered ? 'checked':''} /></td>
+            <td style="background-color:${quantityColor};"><input type="number" value="${order.quantity ?? 0}" /></td>
+            <td style="background-color:${deliveredBg}; text-align:center;"><input type="checkbox" ${order.delivered ? 'checked':''} /></td>
             <td><input type="date" value="${order.date ? order.date.split('T')[0] : ''}" /></td>
-            <td><button onclick="updateOrder('${order.id}', this)">Sauvegarder</button></td>
+            <td class="actions">
+                <button onclick="updateOrder('${order.id}', this)" class="small">Sauvegarder</button>
+                <button onclick="deleteOrder('${order.id}')" class="small btn-danger">Supprimer</button>
+            </td>
         `;
         tbody.appendChild(tr);
     });
@@ -111,14 +126,21 @@ window.updateOrder = async function(id, btn) {
     const weapon = tr.children[1].querySelector('select').value;
     const quantity = parseInt(tr.children[2].querySelector('input').value) || 0;
     const delivered = tr.children[3].querySelector('input').checked;
-    const date = tr.children[4].querySelector('input').value;
+    const date = tr.children[4].querySelector('input').value || null;
 
     const { error } = await supabase.from('orders')
         .update({ group, weapon, quantity, delivered, date })
         .eq('id', id);
 
     if(error) alert('Erreur : ' + error.message);
-    else { alert('Commande modifiée !'); fetchOrders(); }
+    else { fetchOrders(); }
+}
+
+window.deleteOrder = async function(id) {
+    if(!confirm('Supprimer cette commande ?')) return;
+    const { error } = await supabase.from('orders').delete().eq('id', id);
+    if(error) alert('Erreur : ' + error.message);
+    else fetchOrders();
 }
 
 window.addOrderRow = function() {
@@ -127,14 +149,14 @@ window.addOrderRow = function() {
     tr.innerHTML = `
         <td><input type="text" placeholder="Nom du groupe" /></td>
         <td>
-            <select>${armesDisponibles.map(a => `<option value="${a}">${a}</option>`)}</select>
+            <select>${armesDisponibles.map(a => `<option value="${a}">${a}</option>`).join('')}</select>
         </td>
         <td><input type="number" value="1" /></td>
-        <td><input type="checkbox" /></td>
+        <td style="text-align:center;"><input type="checkbox" /></td>
         <td><input type="date" /></td>
-        <td><button onclick="saveNewOrder(this)">Ajouter</button></td>
+        <td class="actions"><button onclick="saveNewOrder(this)" class="small">Ajouter</button></td>
     `;
-    tbody.appendChild(tr);
+    tbody.prepend(tr);
 }
 
 window.saveNewOrder = async function(btn) {
@@ -143,18 +165,18 @@ window.saveNewOrder = async function(btn) {
     const weapon = tr.children[1].querySelector('select').value;
     const quantity = parseInt(tr.children[2].querySelector('input').value) || 0;
     const delivered = tr.children[3].querySelector('input').checked;
-    const date = tr.children[4].querySelector('input').value;
+    const date = tr.children[4].querySelector('input').value || null;
 
     const { data, error } = await supabase.from('orders')
         .insert([{ group, weapon, quantity, delivered, date }]);
 
     if(error) alert('Erreur : ' + error.message);
-    else { alert('Commande ajoutée !'); fetchOrders(); }
+    else { fetchOrders(); }
 }
 
-// --- Contacts ---
+// ----------------- CONTACTS -----------------
 async function fetchContacts() {
-    const { data, error } = await supabase.from('contacts').select('*');
+    const { data, error } = await supabase.from('contacts').select('*').order('id', { ascending: false });
     if(error){ console.error(error); return; }
 
     const tbody = document.querySelector("#contactsTable tbody");
@@ -162,14 +184,81 @@ async function fetchContacts() {
     data.forEach(contact => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td>${contact.group}</td>
-            <td>${contact.lead}</td>
-            <td>${contact.co_lead}</td>
-            <td>${contact.manager}</td>
-            <td>${contact.assistant}</td>
+            <td><input type="text" value="${escapeHtml(contact.group || '')}" /></td>
+            <td><input type="text" value="${escapeHtml(contact.lead || '')}" /></td>
+            <td><input type="text" value="${escapeHtml(contact.co_lead || '')}" /></td>
+            <td><input type="text" value="${escapeHtml(contact.manager || '')}" /></td>
+            <td><input type="text" value="${escapeHtml(contact.assistant || '')}" /></td>
+            <td class="actions">
+                <button onclick="updateContact('${contact.id}', this)" class="small">Sauvegarder</button>
+                <button onclick="deleteContact('${contact.id}')" class="small btn-danger">Supprimer</button>
+            </td>
         `;
         tbody.appendChild(tr);
     });
+}
+
+window.addContactRow = function() {
+    const tbody = document.querySelector("#contactsTable tbody");
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+        <td><input type="text" placeholder="Nom du groupe" /></td>
+        <td><input type="text" placeholder="Lead" /></td>
+        <td><input type="text" placeholder="Co-lead" /></td>
+        <td><input type="text" placeholder="Gérant" /></td>
+        <td><input type="text" placeholder="Assistant" /></td>
+        <td class="actions"><button onclick="saveNewContact(this)" class="small">Ajouter</button></td>
+    `;
+    tbody.prepend(tr);
+}
+
+window.saveNewContact = async function(btn) {
+    const tr = btn.closest('tr');
+    const group = tr.children[0].querySelector('input').value || null;
+    const lead = tr.children[1].querySelector('input').value || null;
+    const co_lead = tr.children[2].querySelector('input').value || null;
+    const manager = tr.children[3].querySelector('input').value || null;
+    const assistant = tr.children[4].querySelector('input').value || null;
+
+    const { data, error } = await supabase.from('contacts')
+        .insert([{ group, lead, co_lead, manager, assistant }]);
+
+    if(error) alert('Erreur : ' + error.message);
+    else fetchContacts();
+}
+
+window.updateContact = async function(id, btn) {
+    const tr = btn.closest('tr');
+    const group = tr.children[0].querySelector('input').value || null;
+    const lead = tr.children[1].querySelector('input').value || null;
+    const co_lead = tr.children[2].querySelector('input').value || null;
+    const manager = tr.children[3].querySelector('input').value || null;
+    const assistant = tr.children[4].querySelector('input').value || null;
+
+    const { error } = await supabase.from('contacts')
+        .update({ group, lead, co_lead, manager, assistant })
+        .eq('id', id);
+
+    if(error) alert('Erreur : ' + error.message);
+    else fetchContacts();
+}
+
+window.deleteContact = async function(id) {
+    if(!confirm('Supprimer ce contact ?')) return;
+    const { error } = await supabase.from('contacts').delete().eq('id', id);
+    if(error) alert('Erreur : ' + error.message);
+    else fetchContacts();
+}
+
+// ----------------- Utilitaires -----------------
+function escapeHtml(unsafe) {
+    if(unsafe === null || unsafe === undefined) return '';
+    return String(unsafe)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
 }
 
 // --- Initialisation ---
