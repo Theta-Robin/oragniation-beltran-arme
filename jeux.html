@@ -155,7 +155,7 @@
 
 <script>
 /* --------------------------- SUPABASE --------------------------- */
-const supabase = supabase.createClient(
+const supabaseClient = supabase.createClient(
   "https://ldhxyloqdtplevdkgnah.supabase.co",
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxkaHh5bG9xZHRwbGV2ZGtnbmFoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEyMTg5NjAsImV4cCI6MjA3Njc5NDk2MH0.pnoppZtVEP3uDrMEfauPAMMB93EmGO5Ur1pg4OY99-o"
 );
@@ -235,15 +235,13 @@ async function saveScore() {
   const name = prompt("Entre ton pseudo pour le classement :");
   if (!name) return;
 
-  await supabase
-    .from("scores")
-    .insert([{ name: name, score: score }]);
+  await supabaseClient.from("scores").insert([{ name: name, score: score }]);
 
   loadScores();
 }
 
 async function loadScores() {
-  const { data } = await supabase
+  const { data } = await supabaseClient
     .from("scores")
     .select("*")
     .order("score", { ascending: false })
