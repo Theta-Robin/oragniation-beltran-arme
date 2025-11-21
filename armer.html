@@ -59,7 +59,7 @@ button { padding: 5px 10px; margin-left: 5px; cursor:pointer; }
     <br><br>
     <button onclick="addMember()" style="background:#2ecc71; color:white;">Ajouter</button>
 
-    <p id="addMemberMsg" style="color:red; font-weight:bold;"></p>
+    <p id="addMemberMsg" style="font-weight:bold;"></p>
 </div>
 
 <br>
@@ -90,23 +90,24 @@ const armesList = [
     "Pistolet lourd","pompe","guse","tec-9"
 ];
 
-
 // -------- FORMAT DATE JJ/MM/AAAA HH:MM --------
 function formatDateTime() {
     const d = new Date();
-    return d.toLocaleDateString("fr-FR") + " " + d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+    return d.toLocaleDateString("fr-FR") + " " +
+           d.toLocaleTimeString("fr-FR", { hour:"2-digit", minute:"2-digit" });
 }
-
 
 // -------- AJOUTER UN MEMBRE --------
 async function addMember(){
     const prenom = document.getElementById('newPrenom').value.trim();
     const role_id = parseInt(document.getElementById('newRole').value);
     const msg = document.getElementById('addMemberMsg');
+
     msg.textContent = "";
+    msg.style.color = "red";
 
     if(!prenom){
-        msg.textContent = "Le prénom est obligatoire.";
+        msg.textContent = "⚠ Le prénom est obligatoire.";
         return;
     }
 
@@ -116,36 +117,33 @@ async function addMember(){
         .select();
 
     if(error){
-        msg.textContent = "Erreur Supabase : " + error.message;
+        msg.textContent = "❌ Erreur : " + error.message;
         console.error(error);
         return;
     }
 
     msg.style.color = "green";
-    msg.textContent = "Membre ajouté avec succès !";
+    msg.textContent = "✔ Membre ajouté avec succès !";
 
     document.getElementById('newPrenom').value = "";
 
     fetchMembers();
 
+    // message disparaît après 2 secondes
     setTimeout(()=> msg.textContent="", 2000);
 }
 
-
-// -------- RÉCUPÉRER DISTRIBUTIONS --------
+// -------- RÉCUP DISTRIBUTIONS --------
 async function fetchDistributions() {
     const { data } = await supabase.from('distributions').select('*');
     return data || [];
 }
 
-
-// -------- AFFICHER LES MEMBRES --------
+// -------- AFFICHAGE MEMBRES --------
 async function fetchMembers() {
-    const { data: members, error } = await supabase
+    const { data: members } = await supabase
         .from("membres")
         .select("id, prenom, role_id, roles(nom)");
-
-    if(error){ console.error(error); return; }
 
     const distributions = await fetchDistributions();
     const tbody = document.querySelector("#membersTable tbody");
@@ -162,40 +160,37 @@ async function fetchMembers() {
         const tdArmes = document.createElement("td");
         const selectArmes = document.createElement("select");
         selectArmes.multiple = true;
+
         armesList.forEach(a => {
             const opt = document.createElement("option");
             opt.value = a;
             opt.textContent = a;
             selectArmes.appendChild(opt);
         });
+
         tdArmes.appendChild(selectArmes);
         tr.appendChild(tdArmes);
 
-        // Bouton Donné
         const tdDonne = document.createElement("td");
         const btnDonne = document.createElement("button");
         btnDonne.textContent = "Donné";
         tdDonne.appendChild(btnDonne);
         tr.appendChild(tdDonne);
 
-        // Rendu
         const tdRendu = document.createElement("td");
         const chk = document.createElement("input");
         chk.type = "checkbox";
         tdRendu.appendChild(chk);
         tr.appendChild(tdRendu);
 
-        // Jour
         const tdJour = document.createElement("td");
         tr.appendChild(tdJour);
 
-        // Remplit les données existantes
         const memberDist = distributions.filter(d => d.member_id === member.id);
         if(memberDist.length > 0){
             tdJour.textContent = memberDist.map(d => d.arme + " (" + d.date + ")").join(", ");
         }
 
-        // Donner armes
         btnDonne.addEventListener("click", async () => {
             const selected = Array.from(selectArmes.selectedOptions).map(o => o.value);
             if(selected.length === 0) return;
@@ -205,13 +200,12 @@ async function fetchMembers() {
             for(const arme of selected){
                 await supabase.from("distributions").upsert({
                     member_id: member.id,
-                    arme: arme,
+                    arme,
                     date: now
                 });
             }
         });
 
-        // Rendre armes
         chk.addEventListener("change", async () => {
             if(chk.checked){
                 await supabase.from("distributions")
@@ -228,22 +222,14 @@ async function fetchMembers() {
 
 fetchMembers();
 
-
 // -------- REALTIME --------
 const channel = supabase.channel("changes");
-
-channel.on(
-    "postgres_changes",
-    { event: "*", schema: "public", table: "membres" },
-    fetchMembers
-);
-
-channel.on(
-    "postgres_changes",
-    { event: "*", schema: "public", table: "distributions" },
-    fetchMembers
-);
-
+channel.on("postgres_changes",
+           { event:"*", schema:"public", table:"membres" },
+           fetchMembers);
+channel.on("postgres_changes",
+           { event:"*", schema:"public", table:"distributions" },
+           fetchMembers);
 channel.subscribe();
 </script>
 
