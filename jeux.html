@@ -136,7 +136,7 @@
 <h1>Attrape le carré !</h1>
 <div id="gameArea"></div>
 <div id="score">Score : 0</div>
-<div id="timer">Temps restant : 60s</div>
+<div id="timer">Temps restant : 30s</div>
 <div id="endMessage"></div>
 
 <button id="restartBtn">🔄 Rejouer</button>
@@ -168,7 +168,7 @@ const endMessage = document.getElementById('endMessage');
 const restartBtn = document.getElementById('restartBtn');
 
 let score = 0;
-let timeLeft = 60;
+let timeLeft = 30;
 let gameActive = true;
 
 /* --------------------------- FONCTIONS JEU --------------------------- */
@@ -218,10 +218,10 @@ function startTimer() {
 
 function resetGame() {
   score = 0;
-  timeLeft = 60;
+  timeLeft = 30;
   gameActive = true;
   scoreDisplay.textContent = 'Score : 0';
-  timerDisplay.textContent = 'Temps restant : 60s';
+  timerDisplay.textContent = 'Temps restant : 30s';
   endMessage.textContent = '';
 
   document.querySelectorAll('.box').forEach(b => b.remove());
@@ -282,3 +282,4 @@ loadScores();
 </script>
 </body>
 </html>
+
