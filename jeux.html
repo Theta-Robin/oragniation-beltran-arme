@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <title>Attrape le carré !</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
 
@@ -15,7 +17,7 @@
     color: #0f0;
     height: 100vh;
     margin: 0;
-    overflow: hidden;
+    overflow: auto;
   }
 
   h1 {
@@ -44,12 +46,11 @@
     cursor: pointer;
     border: 1px solid #0f0;
     box-shadow: 0 0 10px #0f0, 0 0 20px #0f0;
-    transition: transform 0.2s, background-color 0.2s;
+    transition: transform 0.2s;
   }
 
   .box:hover {
     transform: scale(1.3);
-    background-color: #00ff00;
   }
 
   #score, #timer {
@@ -66,9 +67,28 @@
     text-shadow: 0 0 5px #0f0;
   }
 
-  /* Animation fond style hacker */
+  #scoreboard {
+    margin-top: 30px;
+    width: 400px;
+    border: 1px solid #0f0;
+    padding: 10px;
+    box-shadow: 0 0 10px #0f0;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    color: #0f0;
+  }
+
+  td, th {
+    border-bottom: 1px solid #0f0;
+    padding: 5px;
+    text-align: left;
+  }
+
   #matrix {
-    position: absolute;
+    position: fixed;
     top: 0;
     left: 0;
     width: 100%;
@@ -91,6 +111,7 @@
     0% { transform: translateY(-100%); }
     100% { transform: translateY(100vh); }
   }
+
 </style>
 </head>
 <body>
@@ -100,74 +121,130 @@
 <div id="score">Score : 0</div>
 <div id="timer">Temps restant : 60s</div>
 <div id="endMessage"></div>
+
+<div id="scoreboard">
+  <h2>🏆 Classement</h2>
+  <table id="scoresTable">
+    <thead>
+      <tr><th>Nom</th><th>Score</th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+
 <div id="matrix"></div>
 
 <script>
-  // ======= Jeu =======
-  const gameArea = document.getElementById('gameArea');
-  const scoreDisplay = document.getElementById('score');
-  const timerDisplay = document.getElementById('timer');
-  const endMessage = document.getElementById('endMessage');
+/* --------------------------- SUPABASE --------------------------- */
+const supabase = supabase.createClient(
+  "https://ldhxyloqdtplevdkgnah.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxkaHh5bG9xZHRwbGV2ZGtnbmFoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEyMTg5NjAsImV4cCI6MjA3Njc5NDk2MH0.pnoppZtVEP3uDrMEfauPAMMB93EmGO5Ur1pg4OY99-o"
+);
 
-  let score = 0;
-  let timeLeft = 30;
-  let gameActive = true;
+/* --------------------------- JEU --------------------------- */
+const gameArea = document.getElementById('gameArea');
+const scoreDisplay = document.getElementById('score');
+const timerDisplay = document.getElementById('timer');
+const endMessage = document.getElementById('endMessage');
 
-  function spawnBox() {
+let score = 0;
+let timeLeft = 60;
+let gameActive = true;
+
+function spawnBox() {
+  if (!gameActive) return;
+
+  const box = document.createElement('div');
+  box.classList.add('box');
+
+  const maxX = gameArea.clientWidth - 50;
+  const maxY = gameArea.clientHeight - 50;
+
+  box.style.left = Math.random() * maxX + 'px';
+  box.style.top = Math.random() * maxY + 'px';
+
+  box.onclick = () => {
     if (!gameActive) return;
+    score++;
+    scoreDisplay.textContent = 'Score : ' + score;
+    box.remove();
+    spawnBox();
+  }
 
-    const box = document.createElement('div');
-    box.classList.add('box');
+  gameArea.appendChild(box);
 
-    const maxX = gameArea.clientWidth - 50;
-    const maxY = gameArea.clientHeight - 50;
-    box.style.left = Math.random() * maxX + 'px';
-    box.style.top = Math.random() * maxY + 'px';
+  setTimeout(() => {
+    if (gameArea.contains(box)) box.remove();
+  }, 2000);
+}
 
-    box.onclick = () => {
-      if (!gameActive) return;
-      score++;
-      scoreDisplay.textContent = 'Score : ' + score;
-      box.remove();
-      spawnBox();
+function startTimer() {
+  const timerInterval = setInterval(() => {
+    timeLeft--;
+    timerDisplay.textContent = 'Temps restant : ' + timeLeft + 's';
+
+    if (timeLeft <= 0) {
+      clearInterval(timerInterval);
+      gameActive = false;
+      endMessage.textContent = 'Temps écoulé ! Score final : ' + score;
+
+      document.querySelectorAll('.box').forEach(b => b.remove());
+
+      saveScore();
     }
+  }, 1000);
+}
 
-    gameArea.appendChild(box);
+/* --------------------------- ENREGISTREMENT SCORE --------------------------- */
+async function saveScore() {
+  const name = prompt("Entre ton pseudo pour le classement :");
 
-    setTimeout(() => {
-      if (gameArea.contains(box)) box.remove();
-    }, 2000);
-  }
+  if (!name) return;
 
-  function startTimer() {
-    const timerInterval = setInterval(() => {
-      timeLeft--;
-      timerDisplay.textContent = 'Temps restant : ' + timeLeft + 's';
+  const { error } = await supabase
+    .from("scores")
+    .insert([{ name: name, score: score }]);
 
-      if (timeLeft <= 0) {
-        clearInterval(timerInterval);
-        gameActive = false;
-        endMessage.textContent = 'Temps écoulé ! Score final : ' + score;
-        document.querySelectorAll('.box').forEach(b => b.remove());
-      }
-    }, 1000);
-  }
+  loadScores();
+}
 
-  spawnBox();
-  startTimer();
+/* --------------------------- AFFICHAGE DES SCORES --------------------------- */
+async function loadScores() {
+  const { data } = await supabase
+    .from("scores")
+    .select("*")
+    .order("score", { ascending: false })
+    .limit(10);
 
-  // ======= Fond style hacker =======
-  const matrix = document.getElementById('matrix');
-  const chars = '01ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  for (let i = 0; i < 100; i++) {
-    const span = document.createElement('span');
-    span.classList.add('matrix-char');
-    span.textContent = chars[Math.floor(Math.random() * chars.length)];
-    span.style.left = Math.random() * window.innerWidth + 'px';
-    span.style.animationDuration = (2 + Math.random() * 3) + 's';
-    span.style.fontSize = (12 + Math.random() * 16) + 'px';
-    matrix.appendChild(span);
-  }
+  const tbody = document.querySelector("#scoresTable tbody");
+  tbody.innerHTML = "";
+
+  data.forEach(row => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>${row.name}</td><td>${row.score}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+/* --------------------------- FOND MATRIX --------------------------- */
+const matrix = document.getElementById('matrix');
+const chars = '01ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+
+for (let i = 0; i < 120; i++) {
+  const span = document.createElement('span');
+  span.classList.add('matrix-char');
+  span.textContent = chars[Math.floor(Math.random() * chars.length)];
+  span.style.left = Math.random() * window.innerWidth + 'px';
+  span.style.animationDuration = (2 + Math.random() * 3) + 's';
+  span.style.fontSize = (12 + Math.random() * 16) + 'px';
+  matrix.appendChild(span);
+}
+
+/* --------------------------- LANCEMENT --------------------------- */
+spawnBox();
+startTimer();
+loadScores();
+
 </script>
 
 </body>
