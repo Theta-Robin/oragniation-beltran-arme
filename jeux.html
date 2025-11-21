@@ -26,9 +26,9 @@
     text-shadow: 0 0 5px #0f0, 0 0 10px #0f0;
   }
 
-   #gameArea {
-    width: 1000px;
-    height: 1000px;
+  #gameArea {
+    width: 600px;
+    height: 600px;
     border: 2px solid #0f0;
     position: relative;
     margin-top: 20px;
@@ -38,16 +38,14 @@
     box-shadow: 0 0 20px #0f0 inset, 0 0 20px #0f0;
   }
 
-
-
   .box {
-    width: 100px;
-    height: 100px;
+    width: 80px;
+    height: 80px;
     position: absolute;
     cursor: pointer;
     border: 1px solid #0f0;
     box-shadow: 0 0 10px #0f0, 0 0 20px #0f0;
-    transition: transform 0.2s;
+    transition: transform 0.2s, opacity 0.2s;
   }
 
   .box:hover {
@@ -70,7 +68,7 @@
 
   #scoreboard {
     margin-top: 30px;
-    width: 400px;
+    width: 600px;
     border: 1px solid #0f0;
     padding: 10px;
     box-shadow: 0 0 10px #0f0;
@@ -130,6 +128,17 @@
     color: #000;
   }
 
+  /* animation flash pour la case or */
+  .flash {
+    animation: flash 0.3s;
+  }
+
+  @keyframes flash {
+    0% { opacity: 1; }
+    50% { opacity: 0.3; }
+    100% { opacity: 1; }
+  }
+
 </style>
 </head>
 <body>
@@ -155,13 +164,11 @@
 <div id="matrix"></div>
 
 <script>
-/* --------------------------- SUPABASE --------------------------- */
 const supabaseClient = supabase.createClient(
   "https://ldhxyloqdtplevdkgnah.supabase.co",
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxkaHh5bG9xZHRwbGV2ZGtnbmFoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEyMTg5NjAsImV4cCI6MjA3Njc5NDk2MH0.pnoppZtVEP3uDrMEfauPAMMB93EmGO5Ur1pg4OY99-o"
 );
 
-/* --------------------------- VARIABLES --------------------------- */
 const gameArea = document.getElementById('gameArea');
 const scoreDisplay = document.getElementById('score');
 const timerDisplay = document.getElementById('timer');
@@ -172,50 +179,83 @@ let score = 0;
 let timeLeft = 30;
 let gameActive = true;
 
-/* --------------------------- FONCTIONS JEU --------------------------- */
+function getRandomPosition(size, existingBoxes=[]) {
+  const maxX = gameArea.clientWidth - size;
+  const maxY = gameArea.clientHeight - size;
+  let x, y, overlap;
+  do {
+    x = Math.random() * maxX;
+    y = Math.random() * maxY;
+    overlap = existingBoxes.some(box => {
+      return !(x + size < box.x || x > box.x + box.size || y + size < box.y || y > box.y + box.size);
+    });
+  } while(overlap);
+  return {x, y};
+}
+
 function spawnBoxesPair() {
   if (!gameActive) return;
 
-  // Supprimer toutes les cases précédentes
   document.querySelectorAll('.box').forEach(b => b.remove());
 
-  const maxX = gameArea.clientWidth - 50;
-  const maxY = gameArea.clientHeight - 50;
+  const size = 80;
+  const existingBoxes = [];
 
-  // CASE VERTE (BONNE)
+  // CASE VERTE
   const greenBox = document.createElement('div');
   greenBox.classList.add('box');
   greenBox.style.backgroundColor = '#0f0';
-  greenBox.style.left = Math.random() * maxX + 'px';
-  greenBox.style.top = Math.random() * maxY + 'px';
+  let pos = getRandomPosition(size, existingBoxes);
+  greenBox.style.left = pos.x + 'px';
+  greenBox.style.top = pos.y + 'px';
+  existingBoxes.push({x: pos.x, y: pos.y, size});
 
   greenBox.onclick = () => {
     if (!gameActive) return;
     score++;
     scoreDisplay.textContent = 'Score : ' + score;
-    spawnBoxesPair(); // spawn nouvelle paire après clic
+    greenBox.classList.add('flash');
+    setTimeout(() => spawnBoxesPair(), 150);
   }
 
-  // CASE ROUGE (MAUVAISE)
+  // CASE ROUGE
   const redBox = document.createElement('div');
   redBox.classList.add('box');
   redBox.style.backgroundColor = '#f00';
-  redBox.style.left = Math.random() * maxX + 'px';
-  redBox.style.top = Math.random() * maxY + 'px';
+  pos = getRandomPosition(size, existingBoxes);
+  redBox.style.left = pos.x + 'px';
+  redBox.style.top = pos.y + 'px';
+  existingBoxes.push({x: pos.x, y: pos.y, size});
 
   redBox.onclick = () => {
     if (!gameActive) return;
-    const malusType = Math.random();
-    if (malusType < 0.5) {
+    if (Math.random() < 0.5) {
       score = Math.max(0, score - 2);
-      alert('Malus ! -2 points');
     } else {
       timeLeft = Math.max(0, timeLeft - 5);
-      alert('Malus ! -5 secondes');
     }
     scoreDisplay.textContent = 'Score : ' + score;
     timerDisplay.textContent = 'Temps restant : ' + timeLeft + 's';
-    spawnBoxesPair(); // spawn nouvelle paire après clic
+    redBox.classList.add('flash');
+    setTimeout(() => spawnBoxesPair(), 150);
+  }
+
+  // CASE OR
+  if (Math.random() < 0.05) {
+    const goldBox = document.createElement('div');
+    goldBox.classList.add('box');
+    goldBox.style.backgroundColor = 'gold';
+    pos = getRandomPosition(size, existingBoxes);
+    goldBox.style.left = pos.x + 'px';
+    goldBox.style.top = pos.y + 'px';
+    goldBox.onclick = () => {
+      if (!gameActive) return;
+      score += 3;
+      scoreDisplay.textContent = 'Score : ' + score;
+      goldBox.classList.add('flash');
+      setTimeout(() => spawnBoxesPair(), 150);
+    }
+    gameArea.appendChild(goldBox);
   }
 
   gameArea.appendChild(greenBox);
@@ -226,14 +266,11 @@ function startTimer() {
   const timerInterval = setInterval(() => {
     timeLeft--;
     timerDisplay.textContent = 'Temps restant : ' + timeLeft + 's';
-
     if (timeLeft <= 0) {
       clearInterval(timerInterval);
       gameActive = false;
       endMessage.textContent = 'Temps écoulé ! Score final : ' + score;
-
       document.querySelectorAll('.box').forEach(b => b.remove());
-
       saveScore();
     }
   }, 1000);
@@ -246,20 +283,15 @@ function resetGame() {
   scoreDisplay.textContent = 'Score : 0';
   timerDisplay.textContent = 'Temps restant : 30s';
   endMessage.textContent = '';
-
   document.querySelectorAll('.box').forEach(b => b.remove());
-
   spawnBoxesPair();
   startTimer();
 }
 
-/* --------------------------- SUPABASE --------------------------- */
 async function saveScore() {
   const name = prompt("Entre ton pseudo pour le classement :");
   if (!name) return;
-
   await supabaseClient.from("scores").insert([{ name: name, score: score }]);
-
   loadScores();
 }
 
@@ -269,10 +301,8 @@ async function loadScores() {
     .select("*")
     .order("score", { ascending: false })
     .limit(10);
-
   const tbody = document.querySelector("#scoresTable tbody");
   tbody.innerHTML = "";
-
   data.forEach(row => {
     const tr = document.createElement("tr");
     tr.innerHTML = `<td>${row.name}</td><td>${row.score}</td>`;
@@ -280,15 +310,10 @@ async function loadScores() {
   });
 }
 
-/* --------------------------- MISE A JOUR EN TEMPS RÉEL --------------------------- */
-setInterval(() => {
-  loadScores();
-}, 2000);
+setInterval(() => loadScores(), 2000);
 
-/* --------------------------- FOND MATRIX --------------------------- */
 const matrix = document.getElementById('matrix');
 const chars = '01ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-
 for (let i = 0; i < 120; i++) {
   const span = document.createElement('span');
   span.classList.add('matrix-char');
@@ -299,14 +324,11 @@ for (let i = 0; i < 120; i++) {
   matrix.appendChild(span);
 }
 
-/* --------------------------- EVENEMENTS --------------------------- */
 restartBtn.onclick = resetGame;
 
-/* --------------------------- LANCEMENT --------------------------- */
 spawnBoxesPair();
 startTimer();
 loadScores();
-
 </script>
 </body>
 </html>
