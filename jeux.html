@@ -18,12 +18,20 @@
     height: 100vh;
     margin: 0;
     overflow: auto;
+    padding-bottom: 40px;
   }
 
   h1 {
     margin-top: 20px;
     color: #0f0;
     text-shadow: 0 0 5px #0f0, 0 0 10px #0f0;
+  }
+
+  #controls {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-top: 12px;
   }
 
   #gameArea {
@@ -48,9 +56,7 @@
     transition: transform 0.2s, opacity 0.2s;
   }
 
-  .box:hover {
-    transform: scale(1.3);
-  }
+  .box:hover { transform: scale(1.3); }
 
   #score, #timer {
     margin-top: 15px;
@@ -72,6 +78,17 @@
     border: 1px solid #0f0;
     padding: 10px;
     box-shadow: 0 0 10px #0f0;
+    background: rgba(0,0,0,0.6);
+    border-radius: 6px;
+  }
+
+  #scoreboard h2 { margin: 0 0 8px 0; }
+
+  .scores-container {
+    max-height: 220px; /* zone scrollable */
+    overflow-y: auto;
+    border-top: 1px dashed #0f0;
+    padding-top: 8px;
   }
 
   table {
@@ -81,9 +98,24 @@
   }
 
   td, th {
-    border-bottom: 1px solid #0f0;
-    padding: 5px;
+    border-bottom: 1px solid rgba(0,255,0,0.08);
+    padding: 6px 5px;
     text-align: left;
+    font-size: 15px;
+  }
+
+  /* custom scrollbar (webkit) */
+  .scores-container::-webkit-scrollbar { width: 10px; }
+  .scores-container::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+  .scores-container::-webkit-scrollbar-thumb { background: rgba(0,255,0,0.18); border-radius: 6px; }
+
+  #rules {
+    margin-top: 12px;
+    font-size: 13px;
+    line-height: 1.4;
+    color: #bff2b0;
+    border-top: 1px dashed #0f0;
+    padding-top: 10px;
   }
 
   #matrix {
@@ -97,6 +129,7 @@
     font-family: 'Share Tech Mono', monospace;
     color: #0f0;
     white-space: nowrap;
+    pointer-events: none;
   }
 
   .matrix-char {
@@ -123,52 +156,65 @@
     box-shadow: 0 0 5px #0f0;
   }
 
-  #restartBtn:hover {
-    background: #0f0;
-    color: #000;
-  }
+  #restartBtn:hover { background: #0f0; color: #000; }
 
-  /* animation flash pour la case or */
-  .flash {
-    animation: flash 0.3s;
-  }
+  .flash { animation: flash 0.3s; }
+  @keyframes flash { 0%{opacity:1}50%{opacity:.3}100%{opacity:1} }
 
-  @keyframes flash {
-    0% { opacity: 1; }
-    50% { opacity: 0.3; }
-    100% { opacity: 1; }
+  /* small responsive tweak */
+  @media (max-width: 640px) {
+    #gameArea, #scoreboard { width: 92%; }
   }
-
 </style>
 </head>
 <body>
 
 <h1>Attrape le carré !</h1>
+
+<div id="controls">
+  <div id="score">Score : 0</div>
+  <div id="timer">Temps restant : 30s</div>
+  <button id="restartBtn">🔄 Rejouer</button>
+</div>
+
 <div id="gameArea"></div>
-<div id="score">Score : 0</div>
-<div id="timer">Temps restant : 30s</div>
+
 <div id="endMessage"></div>
 
-<button id="restartBtn">🔄 Rejouer</button>
-
 <div id="scoreboard">
-  <h2>🏆 Classement</h2>
-  <table id="scoresTable">
-    <thead>
-      <tr><th>Nom</th><th>Score</th></tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+  <h2>🏆 Classement (tous les scores)</h2>
+  <div class="scores-container">
+    <table id="scoresTable">
+      <thead>
+        <tr><th>Nom</th><th>Score</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <div id="rules">
+    <strong>Règles du jeu :</strong>
+    <ul>
+      <li>Clique sur les <span style="color:#0f0">cases vertes</span> pour gagner +1 point.</li>
+      <li>Cliquer sur une <span style="color:#f00">case rouge</span> peut te faire perdre 2 points ou enlever 5s.</li>
+      <li>Les <span style="color:gold">cases or</span> donnent +3 points (rare).</li>
+      <li>Tu as 30 secondes au départ. Le chrono descend chaque seconde. Le jeu se termine à 0s.</li>
+      <li>À la fin, entre ton pseudo pour sauvegarder ton score dans le classement.</li>
+      <li>Si tu remarques un comportement étrange (timer qui double), c'est corrigé ici : le timer est géré par une seule variable et on s'assure de nettoyer l'intervalle avant d'en lancer un nouveau.</li>
+    </ul>
+  </div>
 </div>
 
 <div id="matrix"></div>
 
 <script>
+/* ---------------- SUPABASE ---------------- */
 const supabaseClient = supabase.createClient(
   "https://ldhxyloqdtplevdkgnah.supabase.co",
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxkaHh5bG9xZHRwbGV2ZGtnbmFoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEyMTg5NjAsImV4cCI6MjA3Njc5NDk2MH0.pnoppZtVEP3uDrMEfauPAMMB93EmGO5Ur1pg4OY99-o"
 );
 
+/* ---------------- DOM ---------------- */
 const gameArea = document.getElementById('gameArea');
 const scoreDisplay = document.getElementById('score');
 const timerDisplay = document.getElementById('timer');
@@ -179,20 +225,28 @@ let score = 0;
 let timeLeft = 30;
 let gameActive = true;
 
-function getRandomPosition(size, existingBoxes=[]) {
+/* IMPORTANT: timerInterval kept global so we don't create duplicates */
+let timerInterval = null;
+
+/* coordinates helper to avoid overlap */
+function getRandomPosition(size, existingBoxes = []) {
   const maxX = gameArea.clientWidth - size;
   const maxY = gameArea.clientHeight - size;
   let x, y, overlap;
+  let attempts = 0;
   do {
     x = Math.random() * maxX;
     y = Math.random() * maxY;
     overlap = existingBoxes.some(box => {
       return !(x + size < box.x || x > box.x + box.size || y + size < box.y || y > box.y + box.size);
     });
-  } while(overlap);
+    attempts++;
+    if (attempts > 500) break; // fallback to avoid infinite loop
+  } while (overlap);
   return {x, y};
 }
 
+/* spawn pair with green/red and sometimes gold */
 function spawnBoxesPair() {
   if (!gameActive) return;
 
@@ -201,7 +255,7 @@ function spawnBoxesPair() {
   const size = 80;
   const existingBoxes = [];
 
-  // CASE VERTE
+  // GREEN
   const greenBox = document.createElement('div');
   greenBox.classList.add('box');
   greenBox.style.backgroundColor = '#0f0';
@@ -213,12 +267,12 @@ function spawnBoxesPair() {
   greenBox.onclick = () => {
     if (!gameActive) return;
     score++;
-    scoreDisplay.textContent = 'Score : ' + score;
+    updateDisplays();
     greenBox.classList.add('flash');
     setTimeout(() => spawnBoxesPair(), 150);
   }
 
-  // CASE ROUGE
+  // RED
   const redBox = document.createElement('div');
   redBox.classList.add('box');
   redBox.style.backgroundColor = '#f00';
@@ -233,14 +287,18 @@ function spawnBoxesPair() {
       score = Math.max(0, score - 2);
     } else {
       timeLeft = Math.max(0, timeLeft - 5);
+      // if time reaches 0 due to red box, end immediately
+      if (timeLeft <= 0) {
+        endGame();
+        return;
+      }
     }
-    scoreDisplay.textContent = 'Score : ' + score;
-    timerDisplay.textContent = 'Temps restant : ' + timeLeft + 's';
+    updateDisplays();
     redBox.classList.add('flash');
     setTimeout(() => spawnBoxesPair(), 150);
   }
 
-  // CASE OR
+  // GOLD
   if (Math.random() < 0.05) {
     const goldBox = document.createElement('div');
     goldBox.classList.add('box');
@@ -251,7 +309,7 @@ function spawnBoxesPair() {
     goldBox.onclick = () => {
       if (!gameActive) return;
       score += 3;
-      scoreDisplay.textContent = 'Score : ' + score;
+      updateDisplays();
       goldBox.classList.add('flash');
       setTimeout(() => spawnBoxesPair(), 150);
     }
@@ -262,56 +320,107 @@ function spawnBoxesPair() {
   gameArea.appendChild(redBox);
 }
 
+function updateDisplays() {
+  scoreDisplay.textContent = 'Score : ' + score;
+  timerDisplay.textContent = 'Temps restant : ' + timeLeft + 's';
+}
+
+/* centralized end game routine */
+function endGame() {
+  if (!gameActive) return;
+  gameActive = false;
+  if (timerInterval) {
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
+  document.querySelectorAll('.box').forEach(b => b.remove());
+  endMessage.textContent = 'Temps écoulé ! Score final : ' + score;
+  saveScore();
+}
+
+/* start timer safely: clear previous interval first to avoid doubles */
 function startTimer() {
-  const timerInterval = setInterval(() => {
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+  timerInterval = setInterval(() => {
     timeLeft--;
-    timerDisplay.textContent = 'Temps restant : ' + timeLeft + 's';
+    updateDisplays();
     if (timeLeft <= 0) {
-      clearInterval(timerInterval);
-      gameActive = false;
-      endMessage.textContent = 'Temps écoulé ! Score final : ' + score;
-      document.querySelectorAll('.box').forEach(b => b.remove());
-      saveScore();
+      endGame();
     }
   }, 1000);
 }
 
+/* reset */
 function resetGame() {
+  // clear any previous interval to avoid multiple timers (fix bug)
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
   score = 0;
   timeLeft = 30;
   gameActive = true;
-  scoreDisplay.textContent = 'Score : 0';
-  timerDisplay.textContent = 'Temps restant : 30s';
+  updateDisplays();
   endMessage.textContent = '';
   document.querySelectorAll('.box').forEach(b => b.remove());
   spawnBoxesPair();
   startTimer();
 }
 
+/* ----------------- Scores (Supabase) ----------------- */
 async function saveScore() {
   const name = prompt("Entre ton pseudo pour le classement :");
   if (!name) return;
-  await supabaseClient.from("scores").insert([{ name: name, score: score }]);
+  try {
+    await supabaseClient.from("scores").insert([{ name: name, score: score }]);
+  } catch (err) {
+    console.error("Erreur sauvegarde score:", err);
+  }
   loadScores();
 }
 
+/* load all scores (no limit) and show newest first by score desc */
 async function loadScores() {
-  const { data } = await supabaseClient
-    .from("scores")
-    .select("*")
-    .order("score", { ascending: false })
-    .limit(10);
-  const tbody = document.querySelector("#scoresTable tbody");
-  tbody.innerHTML = "";
-  data.forEach(row => {
-    const tr = document.createElement("tr");
-    tr.innerHTML = `<td>${row.name}</td><td>${row.score}</td>`;
-    tbody.appendChild(tr);
-  });
+  try {
+    const { data, error } = await supabaseClient
+      .from("scores")
+      .select("*")
+      .order("score", { ascending: false });
+
+    if (error) {
+      console.error("Erreur supabase:", error);
+      return;
+    }
+    const tbody = document.querySelector("#scoresTable tbody");
+    tbody.innerHTML = "";
+    if (data && data.length) {
+      data.forEach(row => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${escapeHtml(row.name)}</td><td>${row.score}</td>`;
+        tbody.appendChild(tr);
+      });
+    } else {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td colspan="2">Aucun score enregistré</td>`;
+      tbody.appendChild(tr);
+    }
+  } catch (err) {
+    console.error("Erreur loadScores:", err);
+  }
 }
 
-setInterval(() => loadScores(), 2000);
+/* small helper for safety */
+function escapeHtml(str) {
+  if (!str) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
 
+/* auto-refresh scores every 2s (only one interval) */
+let scoresInterval = setInterval(loadScores, 2000);
+
+/* MATRIX background */
 const matrix = document.getElementById('matrix');
 const chars = '01ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 for (let i = 0; i < 120; i++) {
@@ -324,8 +433,10 @@ for (let i = 0; i < 120; i++) {
   matrix.appendChild(span);
 }
 
+/* events */
 restartBtn.onclick = resetGame;
 
+/* initial launch */
 spawnBoxesPair();
 startTimer();
 loadScores();
