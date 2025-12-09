@@ -199,7 +199,7 @@
   <div id="stats">
     <span>Kills : <strong id="kills">0</strong></span>
     <span>Dernier tir : <strong id="lastDmg">0</strong> dégâts</span>
-    <span>Munition : <strong id="ammo">7 / ∞</strong></span>
+    <span>Munition : <strong id="ammo">12 / ∞</strong></span>
     <span id="reloadInfo" style="display:none;">Rechargement...</span>
   </div>
 </div>
@@ -530,7 +530,7 @@ const ammoSpan = document.getElementById("ammo");
 const reloadInfo = document.getElementById("reloadInfo");
 
 /* === AMMO / RELOAD (.50 = 7) === */
-const magSize = 7;
+const magSize = 12;
 let ammoInMag = magSize;
 let isReloading = false;
 const reloadTime = 1.1;
@@ -849,3 +849,4 @@ animate();
 
 </body>
 </html>
+
