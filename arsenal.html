@@ -1,277 +1,957 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Magasin — Famille BELTRAN LEYVA</title>
-<style>
-:root{
-  --khaki:#7b7f4a; 
-  --beige:#efe6d6;
-  --dark:#1f2318;
-  --muted:#9a9a85;
-  --accent:#6b6f3f;
-  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-}
-body{background:linear-gradient(180deg,var(--beige),#f7f4ee);color:var(--dark);margin:0;padding:24px}
-.container{max-width:1100px;margin:0 auto}
-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
-.brand{display:flex;gap:12px;align-items:center}
-.logo{width:58px;height:58px;border-radius:8px;background:var(--khaki);display:flex;align-items:center;justify-content:center;color:var(--beige);font-weight:700;font-size:20px}
-h1{margin:0;font-size:20px}
-.desc{color:var(--muted);font-size:13px}
+  <meta charset="UTF-8">
+  <title>Page modulable en ligne (Supabase)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
-.card{background:linear-gradient(180deg,white, #fbf9f5);border-radius:12px;padding:12px;box-shadow:0 6px 18px rgba(0,0,0,0.06);display:flex;flex-direction:column;gap:10px;cursor:pointer;position:relative}
-.thumb{height:140px;border-radius:8px;overflow:hidden;background:#f0efe8;display:flex;align-items:center;justify-content:center}
-.thumb img{max-width:100%;max-height:100%;object-fit:contain}
-.meta{display:flex;justify-content:space-between;align-items:center}
-.name{font-weight:700}
-.price{font-weight:700;color:var(--khaki)}
-.dur{font-size:13px;color:var(--muted)}
+  <!-- Supabase JS v2 -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-.btn{padding:8px 12px;border-radius:8px;border:0;cursor:pointer;font-weight:600}
-.btn-reserve{background:var(--khaki);color:var(--beige)}
-.btn-disabled{background:#ddd;color:#777;cursor:not-allowed}
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
 
-.reserved{opacity:0.5;filter:grayscale(40%);position:relative}
-.reserved::after{content:'RÉSERVÉ';position:absolute;right:10px;top:10px;background:#222;color:var(--beige);padding:6px 10px;border-radius:6px;font-size:12px;font-weight:700}
+    body {
+      margin: 0;
+      background: #0f172a;
+      color: #e5e7eb;
+      display: flex;
+      justify-content: center;
+      padding: 20px;
+    }
 
-.admin-panel{margin-top:22px;background:#fff9f2;padding:12px;border-radius:10px;border:1px solid rgba(0,0,0,0.04)}
-.flex{display:flex;gap:8px;align-items:center}
-input,select,textarea{padding:8px;border-radius:8px;border:1px solid #e0ddd5;font-size:14px}
-form .row{display:flex;gap:8px}
-footer{margin-top:26px;color:var(--muted);font-size:13px}
+    .app {
+      max-width: 1200px;
+      width: 100%;
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 20px;
+    }
 
-.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.35);display:flex;align-items:center;justify-content:center}
-.modal{background:white;padding:16px;border-radius:10px;max-width:420px;width:100%}
+    @media (max-width: 900px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+    }
 
-@media (max-width:600px){.brand h1{font-size:16px}.thumb{height:110px}}
-</style>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    .panel {
+      background: #020617;
+      padding: 16px 18px;
+      border-radius: 16px;
+      border: 1px solid #1f2937;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+    }
+
+    .panel h1 {
+      font-size: 1.3rem;
+      margin: 0 0 10px;
+    }
+
+    .panel p {
+      font-size: 0.85rem;
+      color: #9ca3af;
+      margin: 0 0 16px;
+    }
+
+    .field-group {
+      margin-bottom: 14px;
+    }
+
+    .field-group label {
+      display: block;
+      font-size: 0.8rem;
+      margin-bottom: 4px;
+      color: #e5e7eb;
+    }
+
+    .field-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    input[type="number"],
+    input[type="text"] {
+      width: 100%;
+      padding: 6px 8px;
+      border-radius: 8px;
+      border: 1px solid #374151;
+      background: #020617;
+      color: #e5e7eb;
+      font-size: 0.85rem;
+    }
+
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    input[type="color"] {
+      width: 100%;
+      height: 32px;
+      padding: 0;
+      border-radius: 8px;
+      border: 1px solid #374151;
+      background: #020617;
+      cursor: pointer;
+    }
+
+    button {
+      border: none;
+      border-radius: 999px;
+      padding: 8px 14px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.12s ease;
+    }
+
+    button:active {
+      transform: translateY(1px) scale(0.99);
+      box-shadow: none;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #0ea5e9, #22c55e);
+      color: white;
+      box-shadow: 0 8px 18px rgba(34,197,94,0.25);
+      width: 100%;
+      justify-content: center;
+      margin-top: 8px;
+    }
+
+    .btn-secondary {
+      background: #111827;
+      color: #e5e7eb;
+      border: 1px solid #374151;
+      font-size: 0.8rem;
+      padding: 6px 10px;
+    }
+
+    .small-hint {
+      font-size: 0.75rem;
+      color: #9ca3af;
+    }
+
+    .main-column {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .notes-area {
+      background: #020617;
+      padding: 14px 16px;
+      border-radius: 16px;
+      border: 1px solid #1f2937;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+      max-height: 260px;
+      overflow: auto;
+    }
+
+    .notes-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      gap: 10px;
+    }
+
+    .notes-header h2 {
+      font-size: 1rem;
+      margin: 0;
+    }
+
+    .notes-empty {
+      font-size: 0.85rem;
+      color: #6b7280;
+      text-align: center;
+      padding: 20px 10px;
+      border: 1px dashed #374151;
+      border-radius: 12px;
+    }
+
+    .note-block {
+      border-radius: 12px;
+      border: 1px solid #1f2937;
+      background: radial-gradient(circle at top left, rgba(94,234,212,0.12), transparent 50%),
+                  #020617;
+      padding: 8px 10px;
+      margin-bottom: 8px;
+    }
+
+    .note-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 6px;
+      font-size: 0.8rem;
+      color: #9ca3af;
+    }
+
+    .note-body {
+      min-height: 40px;
+      font-size: 0.85rem;
+      outline: none;
+      white-space: pre-wrap;
+    }
+
+    .note-body:focus {
+      box-shadow: inset 0 0 0 1px #22c55e;
+      border-radius: 8px;
+    }
+
+    .tables-area {
+      background: #020617;
+      padding: 14px 16px;
+      border-radius: 16px;
+      border: 1px solid #1f2937;
+      min-height: 200px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+      overflow: auto;
+    }
+
+    .tables-empty {
+      font-size: 0.9rem;
+      color: #6b7280;
+      text-align: center;
+      padding: 30px 10px;
+      border: 1px dashed #374151;
+      border-radius: 14px;
+    }
+
+    .table-wrapper {
+      margin-bottom: 20px;
+      padding: 10px;
+      border-radius: 14px;
+      border: 1px solid #111827;
+      background: radial-gradient(circle at top left, rgba(56,189,248,0.15), transparent 50%),
+                  radial-gradient(circle at bottom right, rgba(52,211,153,0.15), transparent 50%),
+                  #020617;
+    }
+
+    .table-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      gap: 10px;
+    }
+
+    .table-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+
+    .table-subinfo {
+      font-size: 0.7rem;
+      color: #9ca3af;
+    }
+
+    .table-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: flex-end;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      table-layout: fixed;
+      background: rgba(15,23,42,0.7);
+      border-radius: 10px;
+      overflow: hidden;
+      font-size: 0.85rem;
+    }
+
+    thead {
+      background: rgba(15,23,42,0.85);
+    }
+
+    th, td {
+      border: 1px solid #111827;
+      padding: 5px 6px;
+      text-align: center;
+      vertical-align: middle;
+      min-height: 30px;
+      word-wrap: break-word;
+    }
+
+    th {
+      font-weight: 600;
+      color: #e5e7eb;
+    }
+
+    td {
+      background: rgba(15,23,42,0.85);
+      color: #e5e7eb;
+      outline: none;
+    }
+
+    td[contenteditable="true"]:focus {
+      box-shadow: inset 0 0 0 1px #22c55e;
+    }
+
+    .cell-red {
+      background: rgba(239,68,68,0.35) !important;
+    }
+    .cell-green {
+      background: rgba(34,197,94,0.35) !important;
+    }
+    .cell-neutral {
+      background: rgba(234,179,8,0.25) !important;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 7px;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      background: rgba(15,23,42,0.9);
+      border: 1px solid #374151;
+      color: #9ca3af;
+    }
+
+    .tag-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+    }
+
+    .status-bar {
+      font-size: 0.7rem;
+      color: #9ca3af;
+      margin-top: 6px;
+    }
+  </style>
 </head>
 <body>
-<div class="container">
-<header>
-  <div class="brand">
-    <div class="logo">B-L</div>
-    <div>
-      <h1>Marché — Famille BELTRAN LEYVA</h1>
-      <div class="desc">Vitrine du marché de la famille Beltran Leyva</div>
-    </div>
-  </div>
-  <div class="flex">
-    <button id="btn-login" class="btn">Connexion admin</button>
-    <button id="btn-open-admin" class="btn" style="display:none;background:transparent;border:1px solid var(--khaki);color:var(--khaki)">Ouvrir panel admin</button>
-  </div>
-</header>
+  <div class="app">
+    <!-- PANNEAU GAUCHE -->
+    <aside class="panel">
+      <h1>Page modulable en ligne</h1>
+      <p>Tous les tableaux et les textes sont partagés entre tous les utilisateurs et sauvegardés dans Supabase.</p>
 
-<main>
-  <section id="items-section">
-    <div class="grid" id="items-grid"></div>
-  </section>
-
-  <section class="admin-panel" id="admin-panel" style="display:none">
-    <h3>Administration</h3>
-    <div style="margin-bottom:10px">Ajouter / supprimer articles et gérer réservations.</div>
-
-    <details open>
-      <summary style="font-weight:700;margin-bottom:8px">Ajouter un article</summary>
-      <form id="add-item-form" style="margin-top:8px;display:flex;flex-direction:column;gap:8px">
-        <input id="w-name" placeholder="Nom de l'article" required />
-        <input id="w-image" placeholder="URL image" />
-        <div class="row">
-          <input id="w-dur" placeholder="Durabilité (0-100)" type="number" min="0" max="100" />
-          <input id="w-base-price" placeholder="Prix de base" type="number" />
-          <input id="w-final-price" placeholder="Prix final" type="number" />
-        </div>
-        <input id="w-description" placeholder="Description / Échange possible (ex: Toris MK2 + reste en argent)" />
-        <div class="flex" style="justify-content:flex-end">
-          <button type="submit" class="btn" style="background:var(--accent);color:var(--beige)">Ajouter</button>
-        </div>
-      </form>
-    </details>
-
-    <details style="margin-top:10px">
-      <summary style="font-weight:700">Réservations en cours</summary>
-      <div id="reservations-list" style="margin-top:8px"></div>
-    </details>
-
-    <details style="margin-top:10px">
-      <summary style="font-weight:700">Supprimer un article</summary>
-      <div id="delete-items-list" style="margin-top:8px"></div>
-    </details>
-
-    <div style="margin-top:12px">
-      <button id="btn-logout" class="btn" style="background:#e27b7b;color:white">Se déconnecter</button>
-    </div>
-  </section>
-
-  <footer><small>Design & fonctionnalité : BELTRAN LEYVA • Theta_Robin</small></footer>
-</main>
-</div>
-
-<div id="modal-root" style="display:none"></div>
-
-<script>
-/* ====== CONFIG SUPABASE ====== */
-const SUPABASE_URL = 'https://ldhxyloqdtplevdkgnah.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxkaHh5bG9xZHRwbGV2ZGtnbmFoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEyMTg5NjAsImV4cCI6MjA3Njc5NDk2MH0.pnoppZtVEP3uDrMEfauPAMMB93EmGO5Ur1pg4OY99-o';
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-/* ====== UTIL ====== */
-function moneyFormat(n){ return Number(n).toLocaleString('fr-FR') + ' $'; }
-function showModal(content){ 
-  const root=document.getElementById('modal-root');
-  root.style.display='flex';
-  root.innerHTML=`<div class="modal-backdrop" onclick="hideModal()">
-    <div class="modal" onclick="event.stopPropagation()">${content}</div>
-  </div>`;
-}
-function hideModal(){ document.getElementById('modal-root').style.display='none'; }
-
-/* ====== CHANGER ICI : le nom de la table utilisée ====== */
-const TABLE_NAME = 'marche';
-
-/* ====== CHARGER LES ARTICLES DU MARCHÉ ====== */
-async function loadItems(){
-  const grid=document.getElementById('items-grid');
-  grid.innerHTML='';
-  const { data,error } = await supabaseClient.from(TABLE_NAME).select('*').order('id');
-  if(error){ console.error(error); grid.innerHTML='<div>Erreur chargement articles</div>'; return; }
-  if(!data || data.length===0){ grid.innerHTML='<div>Aucun article trouvé.</div>'; return; }
-
-  data.forEach(w=>{
-    const card=document.createElement('div');
-    card.className='card'+(w.status==='reserved'?' reserved':'');
-    const price=w.final_price??w.base_price??0;
-    card.innerHTML=`
-      <div class="thumb"><img src="${w.image_url||'https://via.placeholder.com/320x180?text=Article'}" alt="${w.name}" /></div>
-      <div class="meta">
-        <div class="name">${w.name}</div>
-        <div class="price">${moneyFormat(price)}</div>
+      <div class="field-group">
+        <label for="tableTitle">Nom du tableau (optionnel)</label>
+        <input type="text" id="tableTitle" placeholder="Ex : Suivi des stocks, présence, etc.">
       </div>
-      <div class="dur">Durabilité: ${w.durability??0}%</div>
-      ${w.description ? `<div class="dur" style="color:#6b6f3f;font-style:italic;">Description: ${w.description}</div>` : ''}
-    `;
-    
-    if(w.status==='available'){
-      card.addEventListener('click', ()=>{
-        showModal(`
-          <h3>Réserver : ${w.name}</h3>
-          ${w.description ? `<div style="margin-bottom:8px;font-style:italic;color:#6b6f3f;">Description: ${w.description}</div>` : ''}
-          <form id="reserve-form">
-            <input id="player_name" placeholder="Nom" required /><br/>
-            <input id="player_firstname" placeholder="Prénom" required /><br/>
-            <input id="player_phone" placeholder="Téléphone" required /><br/>
-            <input id="reserve_description" placeholder="Description ou note (optionnel)" /><br/>
-            <button type="submit" class="btn btn-reserve">Réserver</button>
-          </form>
-        `);
 
-        document.getElementById('reserve-form').addEventListener('submit', async e=>{
-          e.preventDefault();
-          const player_name=document.getElementById('player_name').value;
-          const player_firstname=document.getElementById('player_firstname').value;
-          const player_phone=document.getElementById('player_phone').value;
-          const descriptionUpdate = document.getElementById('reserve_description').value || null;
-          const { error:updateError } = await supabaseClient
-            .from(TABLE_NAME)
-            .update({status:'reserved',player_name,player_firstname,player_phone, description: descriptionUpdate})
-            .eq('id',w.id);
-          if(updateError){ alert('Erreur réservation: '+updateError.message); return; }
-          hideModal(); loadItems(); loadReservations(); loadDeleteList();
+      <div class="field-group">
+        <label>Structure du tableau</label>
+        <div class="field-row">
+          <div style="flex:1">
+            <input type="number" id="rowsInput" min="1" max="50" value="5" placeholder="Lignes">
+            <span class="small-hint">Lignes</span>
+          </div>
+          <div style="flex:1">
+            <input type="number" id="colsInput" min="1" max="20" value="4" placeholder="Colonnes">
+            <span class="small-hint">Colonnes</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label>Couleurs automatiques (pour les nombres)</label>
+        <div class="field-row">
+          <div style="flex:1">
+            <input type="number" id="redThreshold" placeholder="Ex : 30">
+            <span class="small-hint">En-dessous = <span style="color:#f87171">rouge</span></span>
+          </div>
+          <div style="flex:1">
+            <input type="number" id="greenThreshold" placeholder="Ex : 70">
+            <span class="small-hint">Au-dessus = <span style="color:#4ade80">vert</span></span>
+          </div>
+        </div>
+        <p class="small-hint" style="margin-top:6px;">
+          Entre les deux seuils = jaune.  
+          Si la case contient du texte (nom, etc.) → pas de couleur auto.
+        </p>
+      </div>
+
+      <div class="field-group">
+        <label>Couleur de fond manuelle (optionnelle)</label>
+        <div class="field-row">
+          <input type="color" id="manualColor" value="#1f2933">
+          <button class="btn-secondary" id="applyColorBtn" type="button">
+            Appliquer à la sélection
+          </button>
+        </div>
+        <p class="small-hint">
+          Clique sur une ou plusieurs cases pour les sélectionner, puis clique sur “Appliquer”.
+        </p>
+      </div>
+
+      <button class="btn-primary" type="button" id="addTableBtn">
+        + Ajouter un tableau
+      </button>
+
+      <hr style="border:none;border-top:1px solid #111827;margin:16px 0">
+
+      <div class="field-group">
+        <label>Zones de texte libres</label>
+        <p class="small-hint" style="margin-bottom:6px;">
+          Pour écrire des notes, des explications, parler en dehors des tableaux.
+        </p>
+        <button class="btn-secondary" type="button" id="addNoteBtn">
+          + Ajouter une zone de texte
+        </button>
+      </div>
+
+      <div class="status-bar" id="statusBar">
+        Chargement en cours...
+      </div>
+    </aside>
+
+    <!-- COLONNE DROITE -->
+    <div class="main-column">
+      <!-- NOTES -->
+      <section class="notes-area" id="notesArea">
+        <div class="notes-header">
+          <h2>Zones de texte</h2>
+          <span class="small-hint">Partagées entre tous les utilisateurs.</span>
+        </div>
+        <div class="notes-empty" id="notesEmpty">
+          Aucune zone pour l’instant.<br>
+          Clique sur “Ajouter une zone de texte” à gauche pour commencer.
+        </div>
+      </section>
+
+      <!-- TABLEAUX -->
+      <section class="tables-area" id="tablesArea">
+        <div class="tables-empty" id="emptyState">
+          Aucun tableau pour l’instant.<br>
+          Utilise le panneau à gauche pour en créer un 👈
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    // ⚠️ Clés Supabase (clé anonyme = ok côté navigateur)
+    const SUPABASE_URL = 'https://ldhxyloqdtplevdkgnah.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxkaHh5bG9xZHRwbGV2ZGtnbmFoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEyMTg5NjAsImV4cCI6MjA3Njc5NDk2MH0.pnoppZtVEP3uDrMEfauPAMMB93EmGO5Ur1pg4OY99-o';
+
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const PAGE_ID = 1;
+    const POLL_INTERVAL_MS = 5000; // 5 secondes
+
+    const addTableBtn = document.getElementById('addTableBtn');
+    const rowsInput = document.getElementById('rowsInput');
+    const colsInput = document.getElementById('colsInput');
+    const titleInput = document.getElementById('tableTitle');
+    const redThresholdInput = document.getElementById('redThreshold');
+    const greenThresholdInput = document.getElementById('greenThreshold');
+    const manualColorInput = document.getElementById('manualColor');
+    const applyColorBtn = document.getElementById('applyColorBtn');
+    const tablesArea = document.getElementById('tablesArea');
+    const emptyState = document.getElementById('emptyState');
+
+    const notesArea = document.getElementById('notesArea');
+    const notesEmpty = document.getElementById('notesEmpty');
+    const addNoteBtn = document.getElementById('addNoteBtn');
+    const statusBar = document.getElementById('statusBar');
+
+    let selectedCells = new Set();
+    let lastUpdatedAt = null;
+    let lastLocalEditTime = 0;
+    let isSaving = false;
+
+    /* ---------- UI HELPERS ---------- */
+
+    function setStatus(text) {
+      if (!statusBar) return;
+      statusBar.textContent = text;
+    }
+
+    /* ---------- CREATION TABLE ---------- */
+    function createTable(rows, cols, title, thresholdsFromData) {
+      const wrapper = document.createElement('section');
+      wrapper.className = 'table-wrapper';
+
+      const redTh = thresholdsFromData?.red ?? redThresholdInput.value.trim();
+      const greenTh = thresholdsFromData?.green ?? greenThresholdInput.value.trim();
+      wrapper.dataset.red = redTh;
+      wrapper.dataset.green = greenTh;
+
+      const header = document.createElement('div');
+      header.className = 'table-header';
+
+      const left = document.createElement('div');
+      const hTitle = document.createElement('div');
+      hTitle.className = 'table-title';
+      hTitle.contentEditable = 'true';
+      hTitle.textContent = title || 'Tableau sans titre';
+
+      const sub = document.createElement('div');
+      sub.className = 'table-subinfo';
+      sub.textContent = `${rows} lignes · ${cols} colonnes`;
+
+      left.appendChild(hTitle);
+      left.appendChild(sub);
+
+      const right = document.createElement('div');
+      right.className = 'table-actions';
+
+      const tagRed = document.createElement('div');
+      tagRed.className = 'tag tag-red';
+      const dotR = document.createElement('span');
+      dotR.className = 'tag-dot';
+      dotR.style.background = '#f97373';
+      tagRed.appendChild(dotR);
+      tagRed.appendChild(document.createTextNode(
+        redTh !== '' ? ` < ${redTh}` : ' Rouge : seuil non défini'
+      ));
+
+      const tagGreen = document.createElement('div');
+      tagGreen.className = 'tag tag-green';
+      const dotG = document.createElement('span');
+      dotG.className = 'tag-dot';
+      dotG.style.background = '#4ade80';
+      tagGreen.appendChild(dotG);
+      tagGreen.appendChild(document.createTextNode(
+        greenTh !== '' ? ` > ${greenTh}` : ' Vert : seuil non défini'
+      ));
+
+      const deleteBtn = document.createElement('button');
+      deleteBtn.className = 'btn-secondary';
+      deleteBtn.type = 'button';
+      deleteBtn.textContent = 'Supprimer';
+      deleteBtn.addEventListener('click', () => {
+        wrapper.remove();
+        if (!tablesArea.querySelector('.table-wrapper')) {
+          emptyState.style.display = 'block';
+        }
+        markEditedAndSave();
+      });
+
+      right.appendChild(tagRed);
+      right.appendChild(tagGreen);
+      right.appendChild(deleteBtn);
+
+      header.appendChild(left);
+      header.appendChild(right);
+
+      const table = document.createElement('table');
+      const thead = document.createElement('thead');
+      const headRow = document.createElement('tr');
+
+      for (let c = 0; c < cols; c++) {
+        const th = document.createElement('th');
+        th.contentEditable = 'true';
+        th.textContent = `Col ${c + 1}`;
+        headRow.appendChild(th);
+      }
+      thead.appendChild(headRow);
+      table.appendChild(thead);
+
+      const tbody = document.createElement('tbody');
+      for (let r = 0; r < rows; r++) {
+        const row = document.createElement('tr');
+        for (let c = 0; c < cols; c++) {
+          const td = document.createElement('td');
+          td.contentEditable = 'true';
+          td.dataset.selectable = '1';
+          row.appendChild(td);
+        }
+        tbody.appendChild(row);
+      }
+      table.appendChild(tbody);
+
+      wrapper.appendChild(header);
+      wrapper.appendChild(table);
+
+      emptyState.style.display = 'none';
+      tablesArea.appendChild(wrapper);
+
+      return wrapper;
+    }
+
+    /* ---------- COULEURS AUTO ---------- */
+    function applyAutoColors() {
+      const wrappers = tablesArea.querySelectorAll('.table-wrapper');
+      wrappers.forEach(wrapper => {
+        const redTh = wrapper.dataset.red;
+        const greenTh = wrapper.dataset.green;
+        const red = redTh !== '' ? parseFloat(redTh.replace(',', '.')) : null;
+        const green = greenTh !== '' ? parseFloat(greenTh.replace(',', '.')) : null;
+
+        wrapper.querySelectorAll('td').forEach(td => {
+          td.classList.remove('cell-red', 'cell-green', 'cell-neutral');
+
+          const raw = td.textContent.trim().replace(',', '.');
+          const value = parseFloat(raw);
+          if (isNaN(value)) return;
+
+          if (red !== null && value < red) {
+            td.classList.add('cell-red');
+          } else if (green !== null && value > green) {
+            td.classList.add('cell-green');
+          } else if (red !== null || green !== null) {
+            td.classList.add('cell-neutral');
+          }
         });
       });
     }
-    grid.appendChild(card);
-  });
-}
 
-/* ====== ADMIN: réservations ====== */
-async function loadReservations(){
-  const container=document.getElementById('reservations-list');
-  const { data,error } = await supabaseClient.from(TABLE_NAME).select('*').order('id');
-  if(error){ container.innerHTML='Erreur chargement réservations'; return; }
-  container.innerHTML='';
-  data.filter(w=>w.status==='reserved').forEach(w=>{
-    const div=document.createElement('div');
-    div.innerHTML=`${w.name} — ${w.player_name||''} ${w.player_firstname||''} (${w.player_phone||''}) 
-    ${w.description ? `<span style="margin-left:8px;color:#6b6f3f;font-style:italic">(${w.description})</span>` : ''}
-    <button class="btn" style="background:#e27b7b;color:white;margin-left:5px" onclick="cancelReservation(${w.id})">Annuler</button>`;
-    container.appendChild(div);
-  });
-}
+    /* ---------- ZONES DE TEXTE ---------- */
+    function createNote(content) {
+      const block = document.createElement('div');
+      block.className = 'note-block';
 
-async function cancelReservation(id){
-  const { error } = await supabaseClient.from(TABLE_NAME)
-    .update({status:'available',player_name:null,player_firstname:null,player_phone:null})
-    .eq('id',id);
-  if(error){ alert('Erreur annulation: '+error.message); return; }
-  loadItems(); loadReservations(); loadDeleteList();
-}
+      const top = document.createElement('div');
+      top.className = 'note-top';
+      const label = document.createElement('span');
+      label.textContent = 'Zone de texte';
+      const del = document.createElement('button');
+      del.type = 'button';
+      del.className = 'btn-secondary note-delete';
+      del.textContent = 'Supprimer';
 
-/* ====== ADMIN: suppression ====== */
-async function loadDeleteList(){
-  const container=document.getElementById('delete-items-list');
-  const { data,error } = await supabaseClient.from(TABLE_NAME).select('*').order('id');
-  if(error){ container.innerHTML='Erreur chargement'; return; }
-  container.innerHTML='';
-  data.forEach(w=>{
-    const div=document.createElement('div');
-    div.innerHTML=`${w.name} 
-      <button class="btn" style="background:#e27b7b;color:white;margin-left:5px" onclick="deleteItem(${w.id})">Supprimer</button>`;
-    container.appendChild(div);
-  });
-}
+      top.appendChild(label);
+      top.appendChild(del);
 
-async function deleteItem(id){
-  if(!confirm('Supprimer cet article ?')) return;
-  const { error } = await supabaseClient.from(TABLE_NAME).delete().eq('id',id);
-  if(error){ alert('Erreur suppression: '+error.message); return; }
-  loadItems(); loadReservations(); loadDeleteList();
-}
+      const body = document.createElement('div');
+      body.className = 'note-body';
+      body.contentEditable = 'true';
+      body.innerHTML = content || '';
 
-/* ====== AJOUTER UN ARTICLE ====== */
-document.getElementById('add-item-form').addEventListener('submit', async e=>{
-  e.preventDefault();
-  const name=document.getElementById('w-name').value;
-  const image_url=document.getElementById('w-image').value;
-  const durability=parseInt(document.getElementById('w-dur').value)||0;
-  const base_price=parseFloat(document.getElementById('w-base-price').value)||0;
-  const final_price=parseFloat(document.getElementById('w-final-price').value)||base_price;
-  const description = document.getElementById('w-description').value || null;
-  const { error } = await supabaseClient.from(TABLE_NAME).insert([{
-    name,image_url,durability,base_price,final_price,status:'available',description
-  }]);
-  if(error){ alert('Erreur ajout: '+error.message); return; }
-  e.target.reset(); loadItems(); loadDeleteList();
-});
+      block.appendChild(top);
+      block.appendChild(body);
 
-/* ====== AUTH ADMIN (simple, via Supabase Auth) ====== */
-document.getElementById('btn-login').addEventListener('click', async ()=>{
-  const email = prompt('Email admin:');
-  const password = prompt('Mot de passe:');
-  if(!email || !password) return alert('Email et mot de passe requis');
-  const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-  if(error){ alert('Erreur connexion: '+error.message); return; }
-  document.getElementById('admin-panel').style.display='block';
-  document.getElementById('btn-open-admin').style.display='inline-block';
-  loadReservations(); loadDeleteList();
-});
+      notesEmpty.style.display = 'none';
+      notesArea.appendChild(block);
 
-/* Ouvrir panel admin */
-document.getElementById('btn-open-admin').addEventListener('click', ()=>document.getElementById('admin-panel').style.display='block');
+      return block;
+    }
 
-/* Déconnexion */
-document.getElementById('btn-logout').addEventListener('click', async ()=>{
-  await supabaseClient.auth.signOut();
-  document.getElementById('admin-panel').style.display='none';
-  document.getElementById('btn-open-admin').style.display='none';
-});
+    /* ---------- SERIALISATION DE L'ÉTAT ---------- */
+    function collectState() {
+      const data = {
+        thresholds: {
+          red: redThresholdInput.value.trim(),
+          green: greenThresholdInput.value.trim()
+        },
+        tables: [],
+        notes: []
+      };
 
-/* LANCEMENT */
-loadItems();
-</script>
+      const tableEls = tablesArea.querySelectorAll('.table-wrapper');
+      tableEls.forEach(wrapper => {
+        const table = wrapper.querySelector('table');
+        if (!table) return;
+
+        const titleEl = wrapper.querySelector('.table-title');
+        const title = titleEl ? titleEl.textContent : '';
+
+        const headers = Array.from(table.querySelectorAll('thead th')).map(th => th.textContent);
+        const rowsData = Array.from(table.querySelectorAll('tbody tr')).map(tr =>
+          Array.from(tr.querySelectorAll('td')).map(td => ({
+            content: td.textContent,
+            bg: td.style.backgroundColor || ''
+          }))
+        );
+
+        data.tables.push({
+          title,
+          headers,
+          rows: rowsData.length,
+          cols: headers.length,
+          cells: rowsData
+        });
+      });
+
+      const noteBodies = notesArea.querySelectorAll('.note-body');
+      noteBodies.forEach(body => {
+        data.notes.push({
+          content: body.innerHTML
+        });
+      });
+
+      return data;
+    }
+
+    function renderState(content) {
+      if (!content) return;
+
+      // Seuils
+      if (content.thresholds) {
+        redThresholdInput.value = content.thresholds.red || '';
+        greenThresholdInput.value = content.thresholds.green || '';
+      }
+
+      // Nettoyer notes et tableaux
+      tablesArea.querySelectorAll('.table-wrapper').forEach(w => w.remove());
+      notesArea.querySelectorAll('.note-block').forEach(n => n.remove());
+
+      // Notes
+      if (content.notes && content.notes.length) {
+        content.notes.forEach(n => {
+          createNote(n.content || '');
+        });
+        notesEmpty.style.display = 'none';
+      } else {
+        notesEmpty.style.display = 'block';
+      }
+
+      // Tables
+      if (content.tables && content.tables.length) {
+        content.tables.forEach(t => {
+          const wrapper = createTable(
+            t.rows || 1,
+            t.cols || 1,
+            t.title || '',
+            content.thresholds || {}
+          );
+          const table = wrapper.querySelector('table');
+          if (!table) return;
+
+          // Headers
+          const ths = table.querySelectorAll('thead th');
+          t.headers && t.headers.forEach((h, idx) => {
+            if (ths[idx]) ths[idx].textContent = h;
+          });
+
+          // Cells
+          const trs = table.querySelectorAll('tbody tr');
+          t.cells && t.cells.forEach((rowData, rIdx) => {
+            if (!trs[rIdx]) return;
+            const tds = trs[rIdx].querySelectorAll('td');
+            rowData.forEach((cell, cIdx) => {
+              if (!tds[cIdx]) return;
+              tds[cIdx].textContent = cell.content || '';
+              tds[cIdx].style.backgroundColor = cell.bg || '';
+            });
+          });
+        });
+        emptyState.style.display = 'none';
+      } else {
+        emptyState.style.display = 'block';
+      }
+
+      applyAutoColors();
+    }
+
+    /* ---------- SUPABASE : CHARGER / SAUVER ---------- */
+
+    async function loadFromSupabase(initial = false) {
+      try {
+        const { data, error } = await supabaseClient
+          .from('modular_page')
+          .select('content, updated_at')
+          .eq('id', PAGE_ID)
+          .single();
+
+        if (error) {
+          console.error('Erreur load Supabase :', error);
+          setStatus('Erreur de chargement Supabase');
+          return;
+        }
+
+        if (!data) {
+          setStatus('Aucune donnée trouvée sur le serveur.');
+          return;
+        }
+
+        const serverUpdatedAt = new Date(data.updated_at);
+        lastUpdatedAt = serverUpdatedAt;
+        renderState(data.content);
+        if (initial) {
+          setStatus('Synchronisé avec le serveur ✅');
+        } else {
+          setStatus('Mise à jour depuis le serveur');
+        }
+      } catch (e) {
+        console.error(e);
+        setStatus('Erreur de chargement');
+      }
+    }
+
+    async function saveToSupabase() {
+      try {
+        isSaving = true;
+        setStatus('Sauvegarde en cours...');
+        const content = collectState();
+        const { data, error } = await supabaseClient
+          .from('modular_page')
+          .update({
+            content,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', PAGE_ID)
+          .select('updated_at')
+          .single();
+
+        if (error) {
+          console.error('Erreur save Supabase :', error);
+          setStatus('Erreur de sauvegarde');
+          return;
+        }
+
+        if (data?.updated_at) {
+          lastUpdatedAt = new Date(data.updated_at);
+        }
+        setStatus('Sauvegardé ✅');
+      } catch (e) {
+        console.error(e);
+        setStatus('Erreur de sauvegarde');
+      } finally {
+        isSaving = false;
+      }
+    }
+
+    function markEditedAndSave() {
+      lastLocalEditTime = Date.now();
+      saveToSupabase();
+    }
+
+    function startPolling() {
+      setInterval(async () => {
+        try {
+          // Si on vient d'éditer il y a moins de 2s, évite d'écraser les changements locaux
+          if (Date.now() - lastLocalEditTime < 2000 || isSaving) return;
+
+          const { data, error } = await supabaseClient
+            .from('modular_page')
+            .select('content, updated_at')
+            .eq('id', PAGE_ID)
+            .single();
+
+          if (error || !data) return;
+
+          const serverUpdatedAt = new Date(data.updated_at);
+          if (!lastUpdatedAt || serverUpdatedAt > lastUpdatedAt) {
+            lastUpdatedAt = serverUpdatedAt;
+            renderState(data.content);
+            setStatus('Actualisé depuis le serveur 🔄');
+          }
+        } catch (e) {
+          console.error('Erreur polling :', e);
+        }
+      }, POLL_INTERVAL_MS);
+    }
+
+    /* ---------- LISTENERS ---------- */
+
+    // Création d'un tableau
+    addTableBtn.addEventListener('click', () => {
+      let rows = parseInt(rowsInput.value, 10);
+      let cols = parseInt(colsInput.value, 10);
+
+      if (isNaN(rows) || rows < 1) rows = 1;
+      if (isNaN(cols) || cols < 1) cols = 1;
+
+      const title = titleInput.value.trim();
+      createTable(rows, cols, title, null);
+      applyAutoColors();
+      markEditedAndSave();
+    });
+
+    // Saisie dans cellules / titres / en-têtes
+    tablesArea.addEventListener('input', (e) => {
+      if (
+        e.target.matches('td[contenteditable="true"]') ||
+        e.target.matches('th[contenteditable="true"]') ||
+        e.target.matches('.table-title[contenteditable="true"]')
+      ) {
+        applyAutoColors();
+        markEditedAndSave();
+      }
+    });
+
+    // Sélection de cellules pour couleur manuelle
+    tablesArea.addEventListener('click', (e) => {
+      const cell = e.target.closest('td[data-selectable="1"]');
+      if (!cell) return;
+
+      const key = cell;
+      if (selectedCells.has(key)) {
+        selectedCells.delete(key);
+        cell.style.outline = 'none';
+      } else {
+        selectedCells.add(key);
+        cell.style.outline = '2px solid #38bdf8';
+      }
+    });
+
+    // Appliquer couleur manuelle
+    applyColorBtn.addEventListener('click', () => {
+      const color = manualColorInput.value;
+      selectedCells.forEach(cell => {
+        cell.style.backgroundColor = color;
+        cell.classList.remove('cell-red', 'cell-green', 'cell-neutral');
+        cell.style.outline = 'none';
+      });
+      selectedCells.clear();
+      markEditedAndSave();
+    });
+
+    // Changement seuils -> applique à tous les tableaux
+    function updateThresholdsOnWrappers() {
+      const red = redThresholdInput.value.trim();
+      const green = greenThresholdInput.value.trim();
+
+      tablesArea.querySelectorAll('.table-wrapper').forEach(wrapper => {
+        wrapper.dataset.red = red;
+        wrapper.dataset.green = green;
+
+        const tagRed = wrapper.querySelector('.tag-red');
+        const tagGreen = wrapper.querySelector('.tag-green');
+        if (tagRed) {
+          tagRed.lastChild.nodeValue = red !== '' ? ` < ${red}` : ' Rouge : seuil non défini';
+        }
+        if (tagGreen) {
+          tagGreen.lastChild.nodeValue = green !== '' ? ` > ${green}` : ' Vert : seuil non défini';
+        }
+      });
+
+      applyAutoColors();
+      markEditedAndSave();
+    }
+
+    redThresholdInput.addEventListener('input', updateThresholdsOnWrappers);
+    greenThresholdInput.addEventListener('input', updateThresholdsOnWrappers);
+
+    // Ajout de note
+    addNoteBtn.addEventListener('click', () => {
+      createNote('');
+      markEditedAndSave();
+    });
+
+    // Saisie dans notes
+    notesArea.addEventListener('input', (e) => {
+      if (e.target.matches('.note-body[contenteditable="true"]')) {
+        markEditedAndSave();
+      }
+    });
+
+    // Suppression de note
+    notesArea.addEventListener('click', (e) => {
+      if (e.target.classList.contains('note-delete')) {
+        const block = e.target.closest('.note-block');
+        if (block) block.remove();
+        if (!notesArea.querySelector('.note-block')) {
+          notesEmpty.style.display = 'block';
+        }
+        markEditedAndSave();
+      }
+    });
+
+    // Chargement initial + polling
+    (async () => {
+      setStatus('Connexion à Supabase...');
+      await loadFromSupabase(true);
+      startPolling();
+    })();
+  </script>
 </body>
 </html>
