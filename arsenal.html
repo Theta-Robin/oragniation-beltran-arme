@@ -7,6 +7,8 @@
 
   <!-- Supabase JS v2 -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Chart.js pour les graphiques -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
     * {
@@ -24,14 +26,14 @@
     }
 
     .app {
-      max-width: 1200px;
+      max-width: 1300px;
       width: 100%;
       display: grid;
       grid-template-columns: 320px 1fr;
       gap: 20px;
     }
 
-    @media (max-width: 900px) {
+    @media (max-width: 1000px) {
       .app {
         grid-template-columns: 1fr;
       }
@@ -73,7 +75,9 @@
     }
 
     input[type="number"],
-    input[type="text"] {
+    input[type="text"],
+    input[type="date"],
+    select {
       width: 100%;
       padding: 6px 8px;
       border-radius: 8px;
@@ -120,9 +124,6 @@
       background: linear-gradient(135deg, #0ea5e9, #22c55e);
       color: white;
       box-shadow: 0 8px 18px rgba(34,197,94,0.25);
-      width: 100%;
-      justify-content: center;
-      margin-top: 8px;
     }
 
     .btn-secondary {
@@ -131,6 +132,19 @@
       border: 1px solid #374151;
       font-size: 0.8rem;
       padding: 6px 10px;
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: #9ca3af;
+      border: 1px dashed #374151;
+      font-size: 0.75rem;
+      padding: 4px 8px;
+    }
+
+    .btn-block {
+      width: 100%;
+      justify-content: center;
     }
 
     .small-hint {
@@ -144,34 +158,46 @@
       gap: 14px;
     }
 
-    .notes-area {
+    .section {
       background: #020617;
-      padding: 14px 16px;
+      padding: 12px 14px;
       border-radius: 16px;
       border: 1px solid #1f2937;
       box-shadow: 0 10px 25px rgba(0,0,0,0.4);
-      max-height: 260px;
-      overflow: auto;
     }
 
-    .notes-header {
+    .section-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 8px;
       gap: 10px;
+      margin-bottom: 8px;
     }
 
-    .notes-header h2 {
+    .section-header h2 {
       font-size: 1rem;
       margin: 0;
+    }
+
+    .badge {
+      font-size: 0.7rem;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: #111827;
+      border: 1px solid #374151;
+      color: #9ca3af;
+    }
+
+    .notes-list {
+      max-height: 180px;
+      overflow: auto;
     }
 
     .notes-empty {
       font-size: 0.85rem;
       color: #6b7280;
       text-align: center;
-      padding: 20px 10px;
+      padding: 12px 10px;
       border: 1px dashed #374151;
       border-radius: 12px;
     }
@@ -208,12 +234,8 @@
     }
 
     .tables-area {
-      background: #020617;
-      padding: 14px 16px;
-      border-radius: 16px;
-      border: 1px solid #1f2937;
       min-height: 200px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+      max-height: 360px;
       overflow: auto;
     }
 
@@ -221,13 +243,13 @@
       font-size: 0.9rem;
       color: #6b7280;
       text-align: center;
-      padding: 30px 10px;
+      padding: 20px 10px;
       border: 1px dashed #374151;
       border-radius: 14px;
     }
 
     .table-wrapper {
-      margin-bottom: 20px;
+      margin-bottom: 18px;
       padding: 10px;
       border-radius: 14px;
       border: 1px solid #111827;
@@ -335,7 +357,6 @@
     }
 
     /* En-têtes avec config colonne */
-
     .th-label {
       display: inline-block;
       min-width: 0;
@@ -358,6 +379,128 @@
     th.th-configured {
       border-bottom: 2px solid #22c55e;
     }
+
+    /* Tasks */
+    .tasks-list {
+      max-height: 200px;
+      overflow: auto;
+    }
+
+    .task-row {
+      display: grid;
+      grid-template-columns: 26px minmax(120px, 1.2fr) minmax(80px, 0.8fr) minmax(80px, 0.7fr) minmax(80px, 0.7fr) 60px;
+      gap: 6px;
+      align-items: center;
+      padding: 4px 0;
+      border-bottom: 1px solid #111827;
+      font-size: 0.8rem;
+    }
+
+    .task-row:last-child {
+      border-bottom: none;
+    }
+
+    .task-title-input {
+      width: 100%;
+    }
+
+    .task-done {
+      transform: scale(1.1);
+      cursor: pointer;
+    }
+
+    .priority-low { color: #22c55e; }
+    .priority-medium { color: #facc15; }
+    .priority-high { color: #f97316; }
+
+    /* Inventory */
+    .inventory-table-wrapper {
+      max-height: 220px;
+      overflow: auto;
+    }
+
+    .inventory-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+    }
+
+    .inventory-table th,
+    .inventory-table td {
+      border: 1px solid #111827;
+      padding: 4px 6px;
+      text-align: center;
+    }
+
+    .inv-low {
+      background: rgba(239,68,68,0.35);
+    }
+    .inv-mid {
+      background: rgba(234,179,8,0.25);
+    }
+    .inv-high {
+      background: rgba(34,197,94,0.35);
+    }
+
+    /* Stats */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 10px;
+    }
+
+    .stat-card {
+      padding: 10px;
+      border-radius: 12px;
+      border: 1px solid #1f2937;
+      background: radial-gradient(circle at top left, rgba(56,189,248,0.2), transparent 60%),
+                  #020617;
+      font-size: 0.8rem;
+    }
+
+    .stat-label {
+      color: #9ca3af;
+      margin-bottom: 4px;
+    }
+
+    .stat-value {
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+
+    /* Logs */
+    .logs-list {
+      max-height: 160px;
+      overflow: auto;
+      font-size: 0.75rem;
+    }
+
+    .log-item {
+      padding: 4px 6px;
+      border-bottom: 1px solid #111827;
+      color: #9ca3af;
+    }
+
+    .log-item:last-child {
+      border-bottom: none;
+    }
+
+    .log-time {
+      color: #6b7280;
+      margin-right: 4px;
+    }
+
+    .log-type {
+      text-transform: uppercase;
+      font-weight: 600;
+      margin-right: 4px;
+    }
+
+    .log-type-edit { color: #38bdf8; }
+    .log-type-task { color: #22c55e; }
+    .log-type-inv { color: #facc15; }
+    .log-type-table { color: #a855f7; }
+    .log-type-import { color: #f97316; }
   </style>
 </head>
 <body>
@@ -365,8 +508,9 @@
     <!-- PANNEAU GAUCHE -->
     <aside class="panel">
       <h1>Page modulable en ligne</h1>
-      <p>Tous les tableaux et les textes sont partagés entre tous les utilisateurs et sauvegardés dans Supabase.</p>
+      <p>Tous les tableaux, textes et données sont partagés entre tous les utilisateurs et sauvegardés dans Supabase.</p>
 
+      <!-- Création de tableau -->
       <div class="field-group">
         <label for="tableTitle">Nom du tableau (optionnel)</label>
         <input type="text" id="tableTitle" placeholder="Ex : Suivi des stocks, présence, etc.">
@@ -390,12 +534,12 @@
         <label>Seuils par défaut (pour nouveaux tableaux)</label>
         <div class="field-row">
           <div style="flex:1">
-            <input type="number" id="redThreshold" placeholder="Ex : 30">
-            <span class="small-hint">Par défaut : rouge si <</span>
+            <input type="number" id="redThreshold" placeholder="Ex : 3000">
+            <span class="small-hint">Rouge si &lt;</span>
           </div>
           <div style="flex:1">
-            <input type="number" id="greenThreshold" placeholder="Ex : 70">
-            <span class="small-hint">Par défaut : vert si ></span>
+            <input type="number" id="greenThreshold" placeholder="Ex : 4000">
+            <span class="small-hint">Vert si &gt;</span>
           </div>
         </div>
         <p class="small-hint" style="margin-top:6px;">
@@ -404,7 +548,7 @@
       </div>
 
       <div class="field-group">
-        <label>Couleur de fond manuelle (optionnelle)</label>
+        <label>Couleur de fond manuelle</label>
         <div class="field-row">
           <input type="color" id="manualColor" value="#1f2933">
           <button class="btn-secondary" id="applyColorBtn" type="button">
@@ -412,11 +556,11 @@
           </button>
         </div>
         <p class="small-hint">
-          Clique sur une ou plusieurs cases pour les sélectionner, puis clique sur “Appliquer”.
+          Clique sur une ou plusieurs cases du tableau, puis clique sur “Appliquer”.
         </p>
       </div>
 
-      <button class="btn-primary" type="button" id="addTableBtn">
+      <button class="btn-primary btn-block" type="button" id="addTableBtn">
         + Ajouter un tableau
       </button>
 
@@ -425,11 +569,28 @@
       <div class="field-group">
         <label>Zones de texte libres</label>
         <p class="small-hint" style="margin-bottom:6px;">
-          Pour écrire des notes, des explications, parler en dehors des tableaux.
+          Pour écrire des notes, explications, consignes RP, etc.
         </p>
-        <button class="btn-secondary" type="button" id="addNoteBtn">
+        <button class="btn-secondary btn-block" type="button" id="addNoteBtn">
           + Ajouter une zone de texte
         </button>
+      </div>
+
+      <hr style="border:none;border-top:1px solid #111827;margin:16px 0">
+
+      <!-- Import / Export -->
+      <div class="field-group">
+        <label>Import / Export de la page</label>
+        <div class="field-row">
+          <button class="btn-secondary" id="exportBtn" type="button">Exporter JSON</button>
+          <label class="btn-ghost" style="cursor:pointer;">
+            Importer
+            <input type="file" id="importInput" accept="application/json" style="display:none;">
+          </label>
+        </div>
+        <p class="small-hint">
+          Permet de sauvegarder ou restaurer l’état complet (tableaux, tâches, inventaire, etc.).
+        </p>
       </div>
 
       <div class="status-bar" id="statusBar">
@@ -439,23 +600,117 @@
 
     <!-- COLONNE DROITE -->
     <div class="main-column">
+
       <!-- NOTES -->
-      <section class="notes-area" id="notesArea">
-        <div class="notes-header">
+      <section class="section" id="notesSection">
+        <div class="section-header">
           <h2>Zones de texte</h2>
-          <span class="small-hint">Partagées entre tous les utilisateurs.</span>
+          <span class="badge">Notes / explications</span>
         </div>
-        <div class="notes-empty" id="notesEmpty">
-          Aucune zone pour l’instant.<br>
-          Clique sur “Ajouter une zone de texte” à gauche pour commencer.
+        <div class="notes-list" id="notesArea">
+          <div class="notes-empty" id="notesEmpty">
+            Aucune zone pour l’instant.<br>
+            Clique sur “Ajouter une zone de texte” à gauche pour commencer.
+          </div>
         </div>
       </section>
 
       <!-- TABLEAUX -->
-      <section class="tables-area" id="tablesArea">
-        <div class="tables-empty" id="emptyState">
-          Aucun tableau pour l’instant.<br>
-          Utilise le panneau à gauche pour en créer un 👈
+      <section class="section">
+        <div class="section-header">
+          <h2>Tableaux</h2>
+          <span class="badge">Colonnes configurables (⚙)</span>
+        </div>
+        <div class="tables-area" id="tablesArea">
+          <div class="tables-empty" id="emptyState">
+            Aucun tableau pour l’instant.<br>
+            Utilise le panneau à gauche pour en créer un 👈
+          </div>
+        </div>
+      </section>
+
+      <!-- TASKS + INVENTAIRE (grid 2 colonnes) -->
+      <div style="display:grid;grid-template-columns: minmax(0,1.1fr) minmax(0,1fr);gap:14px;flex:1 0 auto;flex-wrap:wrap;">
+        <!-- TÂCHES -->
+        <section class="section" id="tasksSection">
+          <div class="section-header">
+            <h2>Missions / Tâches</h2>
+            <span class="badge" id="tasksBadge">0 tâches</span>
+          </div>
+          <div style="margin-bottom:6px;">
+            <button class="btn-secondary" type="button" id="addTaskBtn">+ Ajouter une tâche</button>
+          </div>
+          <div class="tasks-list" id="tasksList">
+            <!-- lignes de tâches -->
+          </div>
+        </section>
+
+        <!-- INVENTAIRE -->
+        <section class="section" id="inventorySection">
+          <div class="section-header">
+            <h2>Inventaire</h2>
+            <span class="badge" id="inventoryBadge">0 items</span>
+          </div>
+          <div style="margin-bottom:6px;">
+            <button class="btn-secondary" type="button" id="addInventoryBtn">+ Ajouter un article</button>
+          </div>
+          <div class="inventory-table-wrapper">
+            <table class="inventory-table" id="inventoryTable">
+              <thead>
+                <tr>
+                  <th>Nom</th>
+                  <th>Catégorie</th>
+                  <th>Quantité</th>
+                  <th>Min</th>
+                  <th>Max</th>
+                  <th>Suppr</th>
+                </tr>
+              </thead>
+              <tbody id="inventoryBody">
+                <!-- lignes inventaire -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+
+      <!-- STATS + GRAPH + LOGS -->
+      <section class="section">
+        <div class="section-header">
+          <h2>Vue d’ensemble</h2>
+          <span class="badge">Stats & graphiques</span>
+        </div>
+
+        <div class="stats-grid" id="statsGrid">
+          <div class="stat-card">
+            <div class="stat-label">Nombre de tableaux</div>
+            <div class="stat-value" id="statTables">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Tâches (faites / total)</div>
+            <div class="stat-value"><span id="statTasksDone">0</span> / <span id="statTasksTotal">0</span></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Articles inventaire</div>
+            <div class="stat-value" id="statItemsCount">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Quantité totale</div>
+            <div class="stat-value" id="statItemsQty">0</div>
+          </div>
+        </div>
+
+        <div style="margin-top:12px;display:grid;grid-template-columns: minmax(0,1.4fr) minmax(0,0.9fr);gap:12px;">
+          <div style="background:#020617;border-radius:12px;border:1px solid #1f2937;padding:8px 10px;">
+            <div style="font-size:0.8rem;color:#9ca3af;margin-bottom:4px;">Graphique inventaire (quantités)</div>
+            <canvas id="inventoryChart" height="130"></canvas>
+          </div>
+          <div style="background:#020617;border-radius:12px;border:1px solid #1f2937;padding:8px 10px;">
+            <div style="font-size:0.8rem;color:#9ca3af;margin-bottom:4px;">Journal des actions</div>
+            <div class="logs-list" id="logsList">
+              <!-- logs -->
+            </div>
+          </div>
         </div>
       </section>
     </div>
@@ -484,12 +739,33 @@
     const notesArea = document.getElementById('notesArea');
     const notesEmpty = document.getElementById('notesEmpty');
     const addNoteBtn = document.getElementById('addNoteBtn');
+
     const statusBar = document.getElementById('statusBar');
+
+    const tasksList = document.getElementById('tasksList');
+    const addTaskBtn = document.getElementById('addTaskBtn');
+    const tasksBadge = document.getElementById('tasksBadge');
+
+    const inventoryBody = document.getElementById('inventoryBody');
+    const addInventoryBtn = document.getElementById('addInventoryBtn');
+    const inventoryBadge = document.getElementById('inventoryBadge');
+
+    const statTables = document.getElementById('statTables');
+    const statTasksDone = document.getElementById('statTasksDone');
+    const statTasksTotal = document.getElementById('statTasksTotal');
+    const statItemsCount = document.getElementById('statItemsCount');
+    const statItemsQty = document.getElementById('statItemsQty');
+
+    const logsList = document.getElementById('logsList');
+
+    const exportBtn = document.getElementById('exportBtn');
+    const importInput = document.getElementById('importInput');
 
     let selectedCells = new Set();
     let lastUpdatedAt = null;
     let lastLocalEditTime = 0;
     let isSaving = false;
+    let inventoryChartInstance = null;
 
     /* ---------- UI HELPERS ---------- */
 
@@ -498,7 +774,66 @@
       statusBar.textContent = text;
     }
 
-    /* ---------- CREATION TABLE ---------- */
+    function formatDateTime(d) {
+      const pad = (n) => String(n).padStart(2, '0');
+      return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+
+    function addLog(type, message) {
+      const now = new Date();
+      const item = document.createElement('div');
+      item.className = 'log-item';
+      const spanTime = document.createElement('span');
+      spanTime.className = 'log-time';
+      spanTime.textContent = `[${formatDateTime(now)}]`;
+      const spanType = document.createElement('span');
+      spanType.className = 'log-type log-type-' + type;
+      spanType.textContent = type;
+      const spanMsg = document.createElement('span');
+      spanMsg.textContent = message;
+      item.appendChild(spanTime);
+      item.appendChild(spanType);
+      item.appendChild(spanMsg);
+      logsList.prepend(item);
+      // limite à 100 logs dans le DOM
+      const all = logsList.querySelectorAll('.log-item');
+      if (all.length > 100) {
+        all[all.length - 1].remove();
+      }
+    }
+
+    /* ---------- NOTES ---------- */
+    function createNote(content) {
+      const block = document.createElement('div');
+      block.className = 'note-block';
+
+      const top = document.createElement('div');
+      top.className = 'note-top';
+      const label = document.createElement('span');
+      label.textContent = 'Zone de texte';
+      const del = document.createElement('button');
+      del.type = 'button';
+      del.className = 'btn-secondary note-delete';
+      del.textContent = 'Supprimer';
+
+      top.appendChild(label);
+      top.appendChild(del);
+
+      const body = document.createElement('div');
+      body.className = 'note-body';
+      body.contentEditable = 'true';
+      body.innerHTML = content || '';
+
+      block.appendChild(top);
+      block.appendChild(body);
+
+      notesEmpty.style.display = 'none';
+      notesArea.appendChild(block);
+
+      return block;
+    }
+
+    /* ---------- TABLES ---------- */
     function createTable(rows, cols, title, thresholdsOptions) {
       const wrapper = document.createElement('section');
       wrapper.className = 'table-wrapper';
@@ -530,14 +865,6 @@
       tagMode.appendChild(dot1);
       tagMode.appendChild(document.createTextNode(' Couleurs par colonne (⚙)'));
 
-      const tagInfo = document.createElement('div');
-      tagInfo.className = 'tag';
-      const dot2 = document.createElement('span');
-      dot2.className = 'tag-dot';
-      dot2.style.background = '#4ade80';
-      tagInfo.appendChild(dot2);
-      tagInfo.appendChild(document.createTextNode(' Ex : 3000–4000 = vert'));
-
       const deleteBtn = document.createElement('button');
       deleteBtn.className = 'btn-secondary';
       deleteBtn.type = 'button';
@@ -547,11 +874,11 @@
         if (!tablesArea.querySelector('.table-wrapper')) {
           emptyState.style.display = 'block';
         }
+        addLog('table', 'Tableau supprimé');
         markEditedAndSave();
       });
 
       right.appendChild(tagMode);
-      right.appendChild(tagInfo);
       right.appendChild(deleteBtn);
 
       header.appendChild(left);
@@ -578,7 +905,6 @@
         gear.className = 'th-gear';
         gear.textContent = '⚙';
 
-        // Seuils init
         const cfg = colThresholdsFromData[c];
         if (cfg) {
           th.dataset.red = cfg.red || '';
@@ -620,7 +946,6 @@
       return wrapper;
     }
 
-    /* ---------- COULEURS AUTO PAR COLONNE ---------- */
     function applyAutoColors() {
       const wrappers = tablesArea.querySelectorAll('.table-wrapper');
       wrappers.forEach(wrapper => {
@@ -657,35 +982,197 @@
       });
     }
 
-    /* ---------- ZONES DE TEXTE ---------- */
-    function createNote(content) {
-      const block = document.createElement('div');
-      block.className = 'note-block';
+    /* ---------- TÂCHES ---------- */
+    function createTaskRow(task) {
+      const row = document.createElement('div');
+      row.className = 'task-row';
 
-      const top = document.createElement('div');
-      top.className = 'note-top';
-      const label = document.createElement('span');
-      label.textContent = 'Zone de texte';
+      const done = document.createElement('input');
+      done.type = 'checkbox';
+      done.className = 'task-done';
+      done.checked = !!task.done;
+
+      const title = document.createElement('input');
+      title.type = 'text';
+      title.className = 'task-title-input';
+      title.placeholder = 'Titre de la tâche';
+      title.value = task.title || '';
+
+      const assignee = document.createElement('input');
+      assignee.type = 'text';
+      assignee.placeholder = 'Assigné à';
+      assignee.value = task.assignee || '';
+
+      const due = document.createElement('input');
+      due.type = 'date';
+      due.value = task.dueDate || '';
+
+      const priority = document.createElement('select');
+      const opts = [
+        { value: 'low', label: 'Basse' },
+        { value: 'medium', label: 'Moyenne' },
+        { value: 'high', label: 'Haute' }
+      ];
+      opts.forEach(o => {
+        const opt = document.createElement('option');
+        opt.value = o.value;
+        opt.textContent = o.label;
+        priority.appendChild(opt);
+      });
+      priority.value = task.priority || 'low';
+
       const del = document.createElement('button');
       del.type = 'button';
-      del.className = 'btn-secondary note-delete';
-      del.textContent = 'Supprimer';
+      del.className = 'btn-secondary task-delete';
+      del.textContent = 'X';
 
-      top.appendChild(label);
-      top.appendChild(del);
+      row.appendChild(done);
+      row.appendChild(title);
+      row.appendChild(assignee);
+      row.appendChild(due);
+      row.appendChild(priority);
+      row.appendChild(del);
 
-      const body = document.createElement('div');
-      body.className = 'note-body';
-      body.contentEditable = 'true';
-      body.innerHTML = content || '';
+      tasksList.appendChild(row);
+      return row;
+    }
 
-      block.appendChild(top);
-      block.appendChild(body);
+    function updateTasksBadge() {
+      const rows = tasksList.querySelectorAll('.task-row');
+      const total = rows.length;
+      let doneCount = 0;
+      rows.forEach(r => {
+        const chk = r.querySelector('.task-done');
+        if (chk && chk.checked) doneCount++;
+      });
+      tasksBadge.textContent = `${doneCount} / ${total} terminées`;
+      statTasksDone.textContent = doneCount;
+      statTasksTotal.textContent = total;
+    }
 
-      notesEmpty.style.display = 'none';
-      notesArea.appendChild(block);
+    /* ---------- INVENTAIRE ---------- */
 
-      return block;
+    function createInventoryRow(item) {
+      const tr = document.createElement('tr');
+      tr.className = 'inventory-row';
+
+      const name = document.createElement('td');
+      const nameInput = document.createElement('input');
+      nameInput.type = 'text';
+      nameInput.value = item.name || '';
+      name.appendChild(nameInput);
+
+      const cat = document.createElement('td');
+      const catInput = document.createElement('input');
+      catInput.type = 'text';
+      catInput.value = item.category || '';
+      cat.appendChild(catInput);
+
+      const qty = document.createElement('td');
+      const qtyInput = document.createElement('input');
+      qtyInput.type = 'number';
+      qtyInput.value = item.quantity ?? '';
+      qty.appendChild(qtyInput);
+
+      const min = document.createElement('td');
+      const minInput = document.createElement('input');
+      minInput.type = 'number';
+      minInput.value = item.min ?? '';
+      min.appendChild(minInput);
+
+      const max = document.createElement('td');
+      const maxInput = document.createElement('input');
+      maxInput.type = 'number';
+      maxInput.value = item.max ?? '';
+      max.appendChild(maxInput);
+
+      const delTd = document.createElement('td');
+      const delBtn = document.createElement('button');
+      delBtn.type = 'button';
+      delBtn.className = 'btn-secondary inv-delete';
+      delBtn.textContent = 'X';
+      delTd.appendChild(delBtn);
+
+      tr.appendChild(name);
+      tr.appendChild(cat);
+      tr.appendChild(qty);
+      tr.appendChild(min);
+      tr.appendChild(max);
+      tr.appendChild(delTd);
+
+      inventoryBody.appendChild(tr);
+      return tr;
+    }
+
+    function updateInventoryColorsAndStats() {
+      const rows = inventoryBody.querySelectorAll('.inventory-row');
+      let itemsCount = 0;
+      let totalQty = 0;
+      rows.forEach(row => {
+        const tds = row.querySelectorAll('td');
+        const qtyVal = parseFloat(tds[2].querySelector('input').value || '0');
+        const minVal = parseFloat(tds[3].querySelector('input').value || '0');
+        const maxVal = parseFloat(tds[4].querySelector('input').value || '0');
+
+        row.classList.remove('inv-low', 'inv-mid', 'inv-high');
+
+        if (!isNaN(qtyVal)) {
+          itemsCount++;
+          totalQty += qtyVal;
+          if (!isNaN(minVal) && qtyVal < minVal) {
+            row.classList.add('inv-low');
+          } else if (!isNaN(maxVal) && qtyVal > maxVal) {
+            row.classList.add('inv-high');
+          } else if (!isNaN(minVal) || !isNaN(maxVal)) {
+            row.classList.add('inv-mid');
+          }
+        }
+      });
+      inventoryBadge.textContent = `${itemsCount} articles`;
+      statItemsCount.textContent = itemsCount;
+      statItemsQty.textContent = totalQty;
+
+      updateInventoryChart();
+    }
+
+    function updateInventoryChart() {
+      if (!window.Chart) return;
+      const rows = inventoryBody.querySelectorAll('.inventory-row');
+      const labels = [];
+      const data = [];
+      rows.forEach(row => {
+        const tds = row.querySelectorAll('td');
+        const name = tds[0].querySelector('input').value || 'Sans nom';
+        const qtyVal = parseFloat(tds[2].querySelector('input').value || '0');
+        labels.push(name);
+        data.push(isNaN(qtyVal) ? 0 : qtyVal);
+      });
+
+      const ctx = document.getElementById('inventoryChart').getContext('2d');
+      if (inventoryChartInstance) {
+        inventoryChartInstance.destroy();
+      }
+      inventoryChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Quantité',
+            data
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            x: { ticks: { color: '#e5e7eb' }, grid: { color: '#111827' } },
+            y: { ticks: { color: '#e5e7eb' }, grid: { color: '#111827' } }
+          }
+        }
+      });
     }
 
     /* ---------- SERIALISATION DE L'ÉTAT ---------- */
@@ -696,9 +1183,13 @@
           green: greenThresholdInput.value.trim()
         },
         tables: [],
-        notes: []
+        notes: [],
+        tasks: [],
+        inventory: [],
+        logs: []
       };
 
+      // Tables
       const tableEls = tablesArea.querySelectorAll('.table-wrapper');
       tableEls.forEach(wrapper => {
         const table = wrapper.querySelector('table');
@@ -735,11 +1226,46 @@
         });
       });
 
+      // Notes
       const noteBodies = notesArea.querySelectorAll('.note-body');
       noteBodies.forEach(body => {
-        data.notes.push({
-          content: body.innerHTML
+        data.notes.push({ content: body.innerHTML });
+      });
+
+      // Tasks
+      const taskRows = tasksList.querySelectorAll('.task-row');
+      taskRows.forEach(row => {
+        const done = row.querySelector('.task-done')?.checked || false;
+        const title = row.querySelector('.task-title-input')?.value || '';
+        const assignee = row.children[2]?.querySelector('input')?.value || '';
+        const due = row.children[3]?.querySelector('input')?.value || '';
+        const priority = row.children[4]?.querySelector('select')?.value || 'low';
+
+        data.tasks.push({
+          done,
+          title,
+          assignee,
+          dueDate: due,
+          priority
         });
+      });
+
+      // Inventory
+      const invRows = inventoryBody.querySelectorAll('.inventory-row');
+      invRows.forEach(row => {
+        const tds = row.querySelectorAll('td');
+        const name = tds[0].querySelector('input').value || '';
+        const category = tds[1].querySelector('input').value || '';
+        const quantity = tds[2].querySelector('input').value || '';
+        const min = tds[3].querySelector('input').value || '';
+        const max = tds[4].querySelector('input').value || '';
+        data.inventory.push({ name, category, quantity, min, max });
+      });
+
+      // Logs
+      const logItems = logsList.querySelectorAll('.log-item');
+      logItems.forEach(li => {
+        data.logs.push({ text: li.textContent });
       });
 
       return data;
@@ -748,15 +1274,18 @@
     function renderState(content) {
       if (!content) return;
 
-      // Seuils par défaut (pas obligatoires, juste pour info / nouveaux tableaux)
+      // Seuils par défaut
       if (content.thresholds) {
         redThresholdInput.value = content.thresholds.red || '';
         greenThresholdInput.value = content.thresholds.green || '';
       }
 
-      // Nettoyer notes et tableaux
+      // Nettoyer tout
       tablesArea.querySelectorAll('.table-wrapper').forEach(w => w.remove());
       notesArea.querySelectorAll('.note-block').forEach(n => n.remove());
+      tasksList.innerHTML = '';
+      inventoryBody.innerHTML = '';
+      logsList.innerHTML = '';
 
       // Notes
       if (content.notes && content.notes.length) {
@@ -794,7 +1323,7 @@
             else th.textContent = h;
           });
 
-          // Column thresholds (si présents)
+          // Column thresholds
           if (t.columnThresholds && t.columnThresholds.length) {
             t.columnThresholds.forEach((cfg, idx) => {
               const th = ths[idx];
@@ -826,7 +1355,35 @@
         emptyState.style.display = 'block';
       }
 
+      // Tasks
+      if (content.tasks && content.tasks.length) {
+        content.tasks.forEach(t => createTaskRow(t));
+      }
+
+      // Inventory
+      if (content.inventory && content.inventory.length) {
+        content.inventory.forEach(i => createInventoryRow(i));
+      }
+
+      // Logs
+      if (content.logs && content.logs.length) {
+        content.logs.forEach(l => {
+          const li = document.createElement('div');
+          li.className = 'log-item';
+          li.textContent = l.text;
+          logsList.appendChild(li);
+        });
+      }
+
       applyAutoColors();
+      updateTasksBadge();
+      updateInventoryColorsAndStats();
+      updateStatsTablesCount();
+    }
+
+    function updateStatsTablesCount() {
+      const count = tablesArea.querySelectorAll('.table-wrapper').length;
+      statTables.textContent = count;
     }
 
     /* ---------- SUPABASE : CHARGER / SAUVER ---------- */
@@ -905,7 +1462,6 @@
     function startPolling() {
       setInterval(async () => {
         try {
-          // Si on vient d'éditer il y a moins de 2s, évite d'écraser les changements locaux
           if (Date.now() - lastLocalEditTime < 2000 || isSaving) return;
 
           const { data, error } = await supabaseClient
@@ -946,10 +1502,12 @@
 
       createTable(rows, cols, title, { globalThresholds });
       applyAutoColors();
+      updateStatsTablesCount();
+      addLog('table', `Nouveau tableau créé (${rows}x${cols})`);
       markEditedAndSave();
     });
 
-    // Saisie dans cellules / titres / en-têtes
+    // Saisie dans cellules / titres / labels de colonnes
     tablesArea.addEventListener('input', (e) => {
       if (
         e.target.matches('td[contenteditable="true"]') ||
@@ -957,6 +1515,7 @@
         e.target.matches('.table-title[contenteditable="true"]')
       ) {
         applyAutoColors();
+        addLog('edit', 'Modification de tableau');
         markEditedAndSave();
       }
     });
@@ -993,6 +1552,7 @@
         }
 
         applyAutoColors();
+        addLog('table', 'Configuration de colonne modifiée');
         markEditedAndSave();
         return;
       }
@@ -1019,26 +1579,21 @@
         cell.style.outline = 'none';
       });
       selectedCells.clear();
-      markEditedAndSave();
-    });
-
-    // Seuils par défaut (juste sauvegardés pour info)
-    redThresholdInput.addEventListener('input', () => {
-      markEditedAndSave();
-    });
-    greenThresholdInput.addEventListener('input', () => {
+      addLog('edit', 'Couleur manuelle appliquée sur des cellules');
       markEditedAndSave();
     });
 
     // Ajout de note
     addNoteBtn.addEventListener('click', () => {
       createNote('');
+      addLog('edit', 'Nouvelle zone de texte créée');
       markEditedAndSave();
     });
 
     // Saisie dans notes
     notesArea.addEventListener('input', (e) => {
       if (e.target.matches('.note-body[contenteditable="true"]')) {
+        addLog('edit', 'Zone de texte modifiée');
         markEditedAndSave();
       }
     });
@@ -1051,8 +1606,108 @@
         if (!notesArea.querySelector('.note-block')) {
           notesEmpty.style.display = 'block';
         }
+        addLog('edit', 'Zone de texte supprimée');
         markEditedAndSave();
       }
+    });
+
+    // Ajout tâche
+    addTaskBtn.addEventListener('click', () => {
+      createTaskRow({ title: '', done: false, priority: 'low' });
+      updateTasksBadge();
+      addLog('task', 'Nouvelle tâche ajoutée');
+      markEditedAndSave();
+    });
+
+    // Gestion tâches
+    tasksList.addEventListener('input', () => {
+      updateTasksBadge();
+      addLog('task', 'Tâche modifiée');
+      markEditedAndSave();
+    });
+
+    tasksList.addEventListener('change', () => {
+      updateTasksBadge();
+      addLog('task', 'Tâche modifiée');
+      markEditedAndSave();
+    });
+
+    tasksList.addEventListener('click', (e) => {
+      if (e.target.classList.contains('task-delete')) {
+        const row = e.target.closest('.task-row');
+        if (row) row.remove();
+        updateTasksBadge();
+        addLog('task', 'Tâche supprimée');
+        markEditedAndSave();
+      }
+    });
+
+    // Ajout inventaire
+    addInventoryBtn.addEventListener('click', () => {
+      createInventoryRow({ name: '', category: '', quantity: '', min: '', max: '' });
+      updateInventoryColorsAndStats();
+      addLog('inv', 'Nouvel article inventaire ajouté');
+      markEditedAndSave();
+    });
+
+    // Gestion inventaire
+    inventoryBody.addEventListener('input', () => {
+      updateInventoryColorsAndStats();
+      addLog('inv', 'Inventaire modifié');
+      markEditedAndSave();
+    });
+
+    inventoryBody.addEventListener('click', (e) => {
+      if (e.target.classList.contains('inv-delete')) {
+        const row = e.target.closest('.inventory-row');
+        if (row) row.remove();
+        updateInventoryColorsAndStats();
+        addLog('inv', 'Article inventaire supprimé');
+        markEditedAndSave();
+      }
+    });
+
+    // Seuils par défaut (juste sauvegardés pour info)
+    redThresholdInput.addEventListener('input', () => {
+      addLog('edit', 'Seuil par défaut rouge modifié');
+      markEditedAndSave();
+    });
+    greenThresholdInput.addEventListener('input', () => {
+      addLog('edit', 'Seuil par défaut vert modifié');
+      markEditedAndSave();
+    });
+
+    // Export / Import
+    exportBtn.addEventListener('click', () => {
+      const content = collectState();
+      const blob = new Blob([JSON.stringify(content, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'page-modulable.json';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      addLog('import', 'Export JSON effectué');
+    });
+
+    importInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        try {
+          const json = JSON.parse(ev.target.result);
+          renderState(json);
+          addLog('import', 'Import JSON appliqué (non encore sauvegardé sur Supabase)');
+          markEditedAndSave();
+        } catch (err) {
+          alert('Erreur lors de la lecture du JSON');
+          console.error(err);
+        }
+      };
+      reader.readAsText(file);
     });
 
     // Chargement initial + polling
