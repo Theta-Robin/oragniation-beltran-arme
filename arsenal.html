@@ -287,6 +287,7 @@
     th {
       font-weight: 600;
       color: #e5e7eb;
+      position: relative;
     }
 
     td {
@@ -332,6 +333,31 @@
       color: #9ca3af;
       margin-top: 6px;
     }
+
+    /* En-têtes avec config colonne */
+
+    .th-label {
+      display: inline-block;
+      min-width: 0;
+    }
+
+    .th-gear {
+      background: transparent;
+      border: none;
+      color: #9ca3af;
+      font-size: 0.75rem;
+      padding: 0 4px;
+      cursor: pointer;
+      opacity: 0.8;
+    }
+
+    .th-gear:hover {
+      opacity: 1;
+    }
+
+    th.th-configured {
+      border-bottom: 2px solid #22c55e;
+    }
   </style>
 </head>
 <body>
@@ -361,20 +387,19 @@
       </div>
 
       <div class="field-group">
-        <label>Couleurs automatiques (pour les nombres)</label>
+        <label>Seuils par défaut (pour nouveaux tableaux)</label>
         <div class="field-row">
           <div style="flex:1">
             <input type="number" id="redThreshold" placeholder="Ex : 30">
-            <span class="small-hint">En-dessous = <span style="color:#f87171">rouge</span></span>
+            <span class="small-hint">Par défaut : rouge si <</span>
           </div>
           <div style="flex:1">
             <input type="number" id="greenThreshold" placeholder="Ex : 70">
-            <span class="small-hint">Au-dessus = <span style="color:#4ade80">vert</span></span>
+            <span class="small-hint">Par défaut : vert si ></span>
           </div>
         </div>
         <p class="small-hint" style="margin-top:6px;">
-          Entre les deux seuils = jaune.  
-          Si la case contient du texte (nom, etc.) → pas de couleur auto.
+          Chaque colonne peut ensuite avoir ses propres valeurs avec ⚙.
         </p>
       </div>
 
@@ -474,14 +499,9 @@
     }
 
     /* ---------- CREATION TABLE ---------- */
-    function createTable(rows, cols, title, thresholdsFromData) {
+    function createTable(rows, cols, title, thresholdsOptions) {
       const wrapper = document.createElement('section');
       wrapper.className = 'table-wrapper';
-
-      const redTh = thresholdsFromData?.red ?? redThresholdInput.value.trim();
-      const greenTh = thresholdsFromData?.green ?? greenThresholdInput.value.trim();
-      wrapper.dataset.red = redTh;
-      wrapper.dataset.green = greenTh;
 
       const header = document.createElement('div');
       header.className = 'table-header';
@@ -502,25 +522,21 @@
       const right = document.createElement('div');
       right.className = 'table-actions';
 
-      const tagRed = document.createElement('div');
-      tagRed.className = 'tag tag-red';
-      const dotR = document.createElement('span');
-      dotR.className = 'tag-dot';
-      dotR.style.background = '#f97373';
-      tagRed.appendChild(dotR);
-      tagRed.appendChild(document.createTextNode(
-        redTh !== '' ? ` < ${redTh}` : ' Rouge : seuil non défini'
-      ));
+      const tagMode = document.createElement('div');
+      tagMode.className = 'tag';
+      const dot1 = document.createElement('span');
+      dot1.className = 'tag-dot';
+      dot1.style.background = '#38bdf8';
+      tagMode.appendChild(dot1);
+      tagMode.appendChild(document.createTextNode(' Couleurs par colonne (⚙)'));
 
-      const tagGreen = document.createElement('div');
-      tagGreen.className = 'tag tag-green';
-      const dotG = document.createElement('span');
-      dotG.className = 'tag-dot';
-      dotG.style.background = '#4ade80';
-      tagGreen.appendChild(dotG);
-      tagGreen.appendChild(document.createTextNode(
-        greenTh !== '' ? ` > ${greenTh}` : ' Vert : seuil non défini'
-      ));
+      const tagInfo = document.createElement('div');
+      tagInfo.className = 'tag';
+      const dot2 = document.createElement('span');
+      dot2.className = 'tag-dot';
+      dot2.style.background = '#4ade80';
+      tagInfo.appendChild(dot2);
+      tagInfo.appendChild(document.createTextNode(' Ex : 3000–4000 = vert'));
 
       const deleteBtn = document.createElement('button');
       deleteBtn.className = 'btn-secondary';
@@ -534,8 +550,8 @@
         markEditedAndSave();
       });
 
-      right.appendChild(tagRed);
-      right.appendChild(tagGreen);
+      right.appendChild(tagMode);
+      right.appendChild(tagInfo);
       right.appendChild(deleteBtn);
 
       header.appendChild(left);
@@ -545,10 +561,38 @@
       const thead = document.createElement('thead');
       const headRow = document.createElement('tr');
 
+      const colThresholdsFromData = thresholdsOptions?.columnThresholds || [];
+      const defaultRed = thresholdsOptions?.globalThresholds?.red ?? redThresholdInput.value.trim();
+      const defaultGreen = thresholdsOptions?.globalThresholds?.green ?? greenThresholdInput.value.trim();
+
       for (let c = 0; c < cols; c++) {
         const th = document.createElement('th');
-        th.contentEditable = 'true';
-        th.textContent = `Col ${c + 1}`;
+
+        const label = document.createElement('span');
+        label.className = 'th-label';
+        label.contentEditable = 'true';
+        label.textContent = `Col ${c + 1}`;
+
+        const gear = document.createElement('button');
+        gear.type = 'button';
+        gear.className = 'th-gear';
+        gear.textContent = '⚙';
+
+        // Seuils init
+        const cfg = colThresholdsFromData[c];
+        if (cfg) {
+          th.dataset.red = cfg.red || '';
+          th.dataset.green = cfg.green || '';
+        } else {
+          th.dataset.red = defaultRed || '';
+          th.dataset.green = defaultGreen || '';
+        }
+        if (th.dataset.red || th.dataset.green) {
+          th.classList.add('th-configured');
+        }
+
+        th.appendChild(label);
+        th.appendChild(gear);
         headRow.appendChild(th);
       }
       thead.appendChild(headRow);
@@ -576,29 +620,39 @@
       return wrapper;
     }
 
-    /* ---------- COULEURS AUTO ---------- */
+    /* ---------- COULEURS AUTO PAR COLONNE ---------- */
     function applyAutoColors() {
       const wrappers = tablesArea.querySelectorAll('.table-wrapper');
       wrappers.forEach(wrapper => {
-        const redTh = wrapper.dataset.red;
-        const greenTh = wrapper.dataset.green;
-        const red = redTh !== '' ? parseFloat(redTh.replace(',', '.')) : null;
-        const green = greenTh !== '' ? parseFloat(greenTh.replace(',', '.')) : null;
+        const ths = wrapper.querySelectorAll('thead th');
+        wrapper.querySelectorAll('tbody tr').forEach(tr => {
+          const tds = tr.querySelectorAll('td');
+          tds.forEach((td, colIndex) => {
+            td.classList.remove('cell-red', 'cell-green', 'cell-neutral');
 
-        wrapper.querySelectorAll('td').forEach(td => {
-          td.classList.remove('cell-red', 'cell-green', 'cell-neutral');
+            const raw = td.textContent.trim().replace(',', '.');
+            const value = parseFloat(raw);
+            if (isNaN(value)) return;
 
-          const raw = td.textContent.trim().replace(',', '.');
-          const value = parseFloat(raw);
-          if (isNaN(value)) return;
+            const th = ths[colIndex];
+            if (!th) return;
 
-          if (red !== null && value < red) {
-            td.classList.add('cell-red');
-          } else if (green !== null && value > green) {
-            td.classList.add('cell-green');
-          } else if (red !== null || green !== null) {
-            td.classList.add('cell-neutral');
-          }
+            const redStr = th.dataset.red || '';
+            const greenStr = th.dataset.green || '';
+
+            const red = redStr !== '' ? parseFloat(redStr.replace(',', '.')) : null;
+            const green = greenStr !== '' ? parseFloat(greenStr.replace(',', '.')) : null;
+
+            if (red === null && green === null) return;
+
+            if (red !== null && value < red) {
+              td.classList.add('cell-red');
+            } else if (green !== null && value > green) {
+              td.classList.add('cell-green');
+            } else {
+              td.classList.add('cell-neutral');
+            }
+          });
         });
       });
     }
@@ -653,7 +707,12 @@
         const titleEl = wrapper.querySelector('.table-title');
         const title = titleEl ? titleEl.textContent : '';
 
-        const headers = Array.from(table.querySelectorAll('thead th')).map(th => th.textContent);
+        const ths = table.querySelectorAll('thead th');
+        const headers = Array.from(ths).map(th => {
+          const label = th.querySelector('.th-label');
+          return label ? label.textContent : th.textContent;
+        });
+
         const rowsData = Array.from(table.querySelectorAll('tbody tr')).map(tr =>
           Array.from(tr.querySelectorAll('td')).map(td => ({
             content: td.textContent,
@@ -661,12 +720,18 @@
           }))
         );
 
+        const columnThresholds = Array.from(ths).map(th => ({
+          red: th.dataset.red || '',
+          green: th.dataset.green || ''
+        }));
+
         data.tables.push({
           title,
           headers,
           rows: rowsData.length,
           cols: headers.length,
-          cells: rowsData
+          cells: rowsData,
+          columnThresholds
         });
       });
 
@@ -683,7 +748,7 @@
     function renderState(content) {
       if (!content) return;
 
-      // Seuils
+      // Seuils par défaut (pas obligatoires, juste pour info / nouveaux tableaux)
       if (content.thresholds) {
         redThresholdInput.value = content.thresholds.red || '';
         greenThresholdInput.value = content.thresholds.green || '';
@@ -710,16 +775,39 @@
             t.rows || 1,
             t.cols || 1,
             t.title || '',
-            content.thresholds || {}
+            {
+              columnThresholds: t.columnThresholds || [],
+              globalThresholds: content.thresholds || {}
+            }
           );
           const table = wrapper.querySelector('table');
           if (!table) return;
 
-          // Headers
           const ths = table.querySelectorAll('thead th');
+
+          // Headers
           t.headers && t.headers.forEach((h, idx) => {
-            if (ths[idx]) ths[idx].textContent = h;
+            const th = ths[idx];
+            if (!th) return;
+            const label = th.querySelector('.th-label');
+            if (label) label.textContent = h;
+            else th.textContent = h;
           });
+
+          // Column thresholds (si présents)
+          if (t.columnThresholds && t.columnThresholds.length) {
+            t.columnThresholds.forEach((cfg, idx) => {
+              const th = ths[idx];
+              if (!th || !cfg) return;
+              th.dataset.red = cfg.red || '';
+              th.dataset.green = cfg.green || '';
+              if (cfg.red || cfg.green) {
+                th.classList.add('th-configured');
+              } else {
+                th.classList.remove('th-configured');
+              }
+            });
+          }
 
           // Cells
           const trs = table.querySelectorAll('tbody tr');
@@ -851,7 +939,12 @@
       if (isNaN(cols) || cols < 1) cols = 1;
 
       const title = titleInput.value.trim();
-      createTable(rows, cols, title, null);
+      const globalThresholds = {
+        red: redThresholdInput.value.trim(),
+        green: greenThresholdInput.value.trim()
+      };
+
+      createTable(rows, cols, title, { globalThresholds });
       applyAutoColors();
       markEditedAndSave();
     });
@@ -860,7 +953,7 @@
     tablesArea.addEventListener('input', (e) => {
       if (
         e.target.matches('td[contenteditable="true"]') ||
-        e.target.matches('th[contenteditable="true"]') ||
+        e.target.matches('.th-label[contenteditable="true"]') ||
         e.target.matches('.table-title[contenteditable="true"]')
       ) {
         applyAutoColors();
@@ -868,8 +961,42 @@
       }
     });
 
-    // Sélection de cellules pour couleur manuelle
+    // Clic dans les tableaux (sélection de cellule OU config colonne)
     tablesArea.addEventListener('click', (e) => {
+      const gear = e.target.closest('.th-gear');
+      if (gear) {
+        const th = gear.closest('th');
+        if (!th) return;
+
+        const currentRed = th.dataset.red || '';
+        const currentGreen = th.dataset.green || '';
+
+        const newRed = prompt(
+          'Valeur rouge : la case devient ROUGE si la valeur est STRICTEMENT inférieure à...',
+          currentRed
+        );
+        if (newRed === null) return; // annulé
+
+        const newGreen = prompt(
+          'Valeur verte : la case devient VERTE si la valeur est STRICTEMENT supérieure à...',
+          currentGreen
+        );
+        if (newGreen === null) return; // annulé
+
+        th.dataset.red = newRed.trim();
+        th.dataset.green = newGreen.trim();
+
+        if (th.dataset.red || th.dataset.green) {
+          th.classList.add('th-configured');
+        } else {
+          th.classList.remove('th-configured');
+        }
+
+        applyAutoColors();
+        markEditedAndSave();
+        return;
+      }
+
       const cell = e.target.closest('td[data-selectable="1"]');
       if (!cell) return;
 
@@ -895,31 +1022,13 @@
       markEditedAndSave();
     });
 
-    // Changement seuils -> applique à tous les tableaux
-    function updateThresholdsOnWrappers() {
-      const red = redThresholdInput.value.trim();
-      const green = greenThresholdInput.value.trim();
-
-      tablesArea.querySelectorAll('.table-wrapper').forEach(wrapper => {
-        wrapper.dataset.red = red;
-        wrapper.dataset.green = green;
-
-        const tagRed = wrapper.querySelector('.tag-red');
-        const tagGreen = wrapper.querySelector('.tag-green');
-        if (tagRed) {
-          tagRed.lastChild.nodeValue = red !== '' ? ` < ${red}` : ' Rouge : seuil non défini';
-        }
-        if (tagGreen) {
-          tagGreen.lastChild.nodeValue = green !== '' ? ` > ${green}` : ' Vert : seuil non défini';
-        }
-      });
-
-      applyAutoColors();
+    // Seuils par défaut (juste sauvegardés pour info)
+    redThresholdInput.addEventListener('input', () => {
       markEditedAndSave();
-    }
-
-    redThresholdInput.addEventListener('input', updateThresholdsOnWrappers);
-    greenThresholdInput.addEventListener('input', updateThresholdsOnWrappers);
+    });
+    greenThresholdInput.addEventListener('input', () => {
+      markEditedAndSave();
+    });
 
     // Ajout de note
     addNoteBtn.addEventListener('click', () => {
