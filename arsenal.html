@@ -442,7 +442,7 @@
       background: rgba(34,197,94,0.35);
     }
 
-    /* Stats */
+    /* Stats (gardés pour compat mais section masquée) */
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -629,7 +629,7 @@
         </div>
       </section>
 
-      <!-- TASKS + INVENTAIRE (grid 2 colonnes) -->
+      <!-- TASKS + INVENTAIRE -->
       <div style="display:grid;grid-template-columns: minmax(0,1.1fr) minmax(0,1fr);gap:14px;flex:1 0 auto;flex-wrap:wrap;">
         <!-- TÂCHES -->
         <section class="section" id="tasksSection">
@@ -674,46 +674,19 @@
         </section>
       </div>
 
-      <!-- STATS + GRAPH + LOGS -->
-      <section class="section">
-        <div class="section-header">
-          <h2>Vue d’ensemble</h2>
-          <span class="badge">Stats & graphiques</span>
-        </div>
-
-        <div class="stats-grid" id="statsGrid">
-          <div class="stat-card">
-            <div class="stat-label">Nombre de tableaux</div>
-            <div class="stat-value" id="statTables">0</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-label">Tâches (faites / total)</div>
-            <div class="stat-value"><span id="statTasksDone">0</span> / <span id="statTasksTotal">0</span></div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-label">Articles inventaire</div>
-            <div class="stat-value" id="statItemsCount">0</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-label">Quantité totale</div>
-            <div class="stat-value" id="statItemsQty">0</div>
-          </div>
-        </div>
-
-        <div style="margin-top:12px;display:grid;grid-template-columns: minmax(0,1.4fr) minmax(0,0.9fr);gap:12px;">
-          <div style="background:#020617;border-radius:12px;border:1px solid #1f2937;padding:8px 10px;">
-            <div style="font-size:0.8rem;color:#9ca3af;margin-bottom:4px;">Graphique inventaire (quantités)</div>
-            <canvas id="inventoryChart" height="130"></canvas>
-          </div>
-          <div style="background:#020617;border-radius:12px;border:1px solid #1f2937;padding:8px 10px;">
-            <div style="font-size:0.8rem;color:#9ca3af;margin-bottom:4px;">Journal des actions</div>
-            <div class="logs-list" id="logsList">
-              <!-- logs -->
-            </div>
-          </div>
-        </div>
-      </section>
     </div>
+  </div>
+
+  <!-- Conteneur caché pour garder les éléments nécessaires au JS (stats / logs / graphique) -->
+  <div style="display:none">
+    <div class="stats-grid" id="statsGrid">
+      <div class="stat-card"><div class="stat-label">Nombre de tableaux</div><div class="stat-value" id="statTables"></div></div>
+      <div class="stat-card"><div class="stat-label">Tâches (faites / total)</div><div class="stat-value"><span id="statTasksDone"></span>/<span id="statTasksTotal"></span></div></div>
+      <div class="stat-card"><div class="stat-label">Articles inventaire</div><div class="stat-value" id="statItemsCount"></div></div>
+      <div class="stat-card"><div class="stat-label">Quantité totale</div><div class="stat-value" id="statItemsQty"></div></div>
+    </div>
+    <div class="logs-list" id="logsList"></div>
+    <canvas id="inventoryChart" height="130"></canvas>
   </div>
 
   <script>
@@ -795,7 +768,6 @@
       item.appendChild(spanType);
       item.appendChild(spanMsg);
       logsList.prepend(item);
-      // limite à 100 logs dans le DOM
       const all = logsList.querySelectorAll('.log-item');
       if (all.length > 100) {
         all[all.length - 1].remove();
@@ -1046,8 +1018,8 @@
         if (chk && chk.checked) doneCount++;
       });
       tasksBadge.textContent = `${doneCount} / ${total} terminées`;
-      statTasksDone.textContent = doneCount;
-      statTasksTotal.textContent = total;
+      if (statTasksDone) statTasksDone.textContent = doneCount;
+      if (statTasksTotal) statTasksTotal.textContent = total;
     }
 
     /* ---------- INVENTAIRE ---------- */
@@ -1129,8 +1101,8 @@
         }
       });
       inventoryBadge.textContent = `${itemsCount} articles`;
-      statItemsCount.textContent = itemsCount;
-      statItemsQty.textContent = totalQty;
+      if (statItemsCount) statItemsCount.textContent = itemsCount;
+      if (statItemsQty) statItemsQty.textContent = totalQty;
 
       updateInventoryChart();
     }
@@ -1148,7 +1120,9 @@
         data.push(isNaN(qtyVal) ? 0 : qtyVal);
       });
 
-      const ctx = document.getElementById('inventoryChart').getContext('2d');
+      const canvas = document.getElementById('inventoryChart');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
       if (inventoryChartInstance) {
         inventoryChartInstance.destroy();
       }
@@ -1383,7 +1357,7 @@
 
     function updateStatsTablesCount() {
       const count = tablesArea.querySelectorAll('.table-wrapper').length;
-      statTables.textContent = count;
+      if (statTables) statTables.textContent = count;
     }
 
     /* ---------- SUPABASE : CHARGER / SAUVER ---------- */
@@ -1667,7 +1641,7 @@
       }
     });
 
-    // Seuils par défaut (juste sauvegardés pour info)
+    // Seuils par défaut
     redThresholdInput.addEventListener('input', () => {
       addLog('edit', 'Seuil par défaut rouge modifié');
       markEditedAndSave();
