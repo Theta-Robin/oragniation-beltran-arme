@@ -3,92 +3,105 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard Recel & Mafia</title>
+  <title>Beltran Leyva — Recel Business Dashboard</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
     body {
-      background: #0f0f0f;
-      color: #f5f5f5;
-      font-family: Arial, sans-serif;
-      padding: 20px;
+      background: #0b0b0b;
+      color: #e6e6e6;
+      font-family: 'Segoe UI', sans-serif;
+      padding: 25px;
     }
 
     h1, h2 {
       text-align: center;
-      color: #ffcc00;
-      margin-bottom: 15px;
+      color: #d4af37;
+      margin-bottom: 12px;
+      text-shadow: 0 0 8px #000;
     }
 
     .dashboard-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 15px;
-      margin-bottom: 30px;
+      gap: 18px;
+      margin-bottom: 40px;
     }
 
     .card {
-      background: #1a1a1a;
+      background: #161616;
       padding: 20px;
       border-radius: 8px;
       box-shadow: 0 0 10px #000;
       text-align: center;
+      border: 1px solid #333;
     }
 
-    .card .value {
-      font-size: 24px;
+    .card-title {
+      font-size: 14px;
+      opacity: 0.7;
+    }
+
+    .value {
+      font-size: 26px;
       font-weight: bold;
-      margin-top: 10px;
+      margin-top: 8px;
     }
 
-    .positive { color: #00ff7f; }
-    .negative { color: #ff5555; }
+    .positive { color: #29ff78; }
+    .negative { color: #ff4949; }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-bottom: 25px;
-      background: #1a1a1a;
-    }
-
-    th, td {
-      border: 1px solid #333;
-      padding: 8px;
-      text-align: left;
+      background: #161616;
+      margin-bottom: 30px;
       font-size: 14px;
+      border: 1px solid #333;
     }
 
-    th { background: #2d0000; color: #ffcc00; }
+    th {
+      background: #2d0000;
+      color: #d4af37;
+      padding: 10px;
+      border: 1px solid #333;
+    }
+
+    td {
+      padding: 8px;
+      border: 1px solid #333;
+    }
 
     .form-container {
       background: #1b1b1b;
-      padding: 15px;
-      border-radius: 6px;
-      margin-bottom: 30px;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 40px;
+      border: 1px solid #333;
     }
 
     input, select {
       width: 100%;
-      padding: 8px;
+      padding: 10px;
       background: #222;
       color: white;
       border: 1px solid #444;
       border-radius: 5px;
-      margin-bottom: 10px;
-      box-sizing: border-box;
+      margin-bottom: 12px;
     }
 
     input[readonly] {
-      background: #181818;
-      color: #ccc;
+      background: #111;
+      color: #999;
     }
 
     button {
       width: 100%;
-      padding: 10px;
+      padding: 12px;
       background: #8b0000;
-      color: #ffcc00;
+      color: #d4af37;
       border: none;
+      font-size: 16px;
       font-weight: bold;
       cursor: pointer;
       border-radius: 6px;
@@ -96,57 +109,52 @@
     }
 
     button:hover {
-      background: #ffcc00;
+      background: #d4af37;
       color: #8b0000;
     }
 
     .filters {
-      margin-bottom: 20px;
       display: flex;
       gap: 15px;
+      margin-bottom: 20px;
     }
 
     .flex-row {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 10px;
+      gap: 12px;
     }
 
-    .tag {
-      font-size: 12px;
-      opacity: 0.7;
-    }
   </style>
 </head>
 <body>
 
-<h1>Beltran Leyva — Recel Business</h1>
+<h1>RECEL BUSINESS — BELTRAN LEYVA</h1>
 
-<!-- DASHBOARD TOTALS -->
+<!-- DASHBOARD -->
 <div class="dashboard-grid">
   <div class="card">
-    <div>Total Recel (Achat)</div>
+    <div class="card-title">Total Achat (gangs)</div>
     <div id="totalBuy" class="value">$0</div>
   </div>
   <div class="card">
-    <div>Total Vente</div>
+    <div class="card-title">Valeur Vente (recel)</div>
     <div id="totalSell" class="value">$0</div>
   </div>
   <div class="card">
-    <div>Profit Global</div>
+    <div class="card-title">Profit Global</div>
     <div id="totalProfit" class="value positive">$0</div>
   </div>
 </div>
 
-
-<!-- TABLEAU PAR GANG -->
+<!-- PAR GANG -->
 <h2>Résumé par Gang</h2>
 <table>
   <thead>
     <tr>
       <th>Gang</th>
-      <th>Total Achat</th>
-      <th>Total Vente</th>
+      <th>Achat total</th>
+      <th>Vente totale</th>
       <th>Profit</th>
       <th>Transactions</th>
     </tr>
@@ -154,44 +162,43 @@
   <tbody id="gangTable"></tbody>
 </table>
 
-
-<!-- TABLEAU PAR CATÉGORIE -->
+<!-- PAR CATÉGORIE -->
 <h2>Résumé par Catégorie</h2>
 <table>
   <thead>
     <tr>
       <th>Catégorie</th>
-      <th>Total Achat</th>
-      <th>Total Vente</th>
+      <th>Achat total</th>
+      <th>Vente totale</th>
       <th>Profit</th>
-      <th>Quantité Totale</th>
+      <th>Quantité totale</th>
     </tr>
   </thead>
   <tbody id="categoryTable"></tbody>
 </table>
 
-
 <!-- AJOUT TRANSACTION -->
-<h2>Ajouter une transaction</h2>
+<h2>Ajouter un achat (collaborateur → gang)</h2>
 <div class="form-container">
+
   <div class="flex-row">
     <div>
-      <span class="tag">Gang</span>
+      <label>Gang</label>
       <select id="gang">
         <option value="">Choisir un gang</option>
-        <option value="Ballas">Ballas</option>
-        <option value="Vagos">Vagos</option>
-        <option value="Families">Families</option>
-        <option value="Marabunta">Marabunta</option>
-        <option value="Bloods">Bloods</option>
-        <option value="Crips">Crips</option>
-        <option value="Triades">Triades</option>
-        <option value="Mafia">Mafia</option>
+        <option>Ballas</option>
+        <option>Vagos</option>
+        <option>Families</option>
+        <option>Marabunta</option>
+        <option>Bloods</option>
+        <option>Crips</option>
+        <option>Triades</option>
+        <option>Mafia</option>
       </select>
     </div>
 
     <div>
-      <span class="tag">Objet de recel</span>
+      <label>Objet</label>
       <select id="itemSelect">
         <option value="">Choisir un item</option>
       </select>
@@ -200,34 +207,32 @@
 
   <div class="flex-row">
     <div>
-      <span class="tag">Catégorie</span>
-      <input id="itemCategory" type="text" readonly>
+      <label>Catégorie</label>
+      <input id="category" readonly>
     </div>
     <div>
-      <span class="tag">Nom</span>
-      <input id="itemName" type="text" readonly>
+      <label>Nom</label>
+      <input id="name" readonly>
     </div>
   </div>
 
   <div class="flex-row">
     <div>
-      <span class="tag">Prix recel (achat au gang)</span>
-      <input id="price_buy" type="number" readonly>
+      <label>Prix Achat Collaborateur</label>
+      <input id="price_buy" readonly>
     </div>
     <div>
-      <span class="tag">Prix vente (+20%)</span>
-      <input id="price_sell" type="number" readonly>
+      <label>Prix Vente (Recel)</label>
+      <input id="price_sell" readonly>
     </div>
   </div>
 
-  <div>
-    <span class="tag">Quantité achetée</span>
-    <input id="qty" type="number" placeholder="Quantité">
-  </div>
+  <label>Quantité</label>
+  <input type="number" id="qty" placeholder="Quantité">
 
   <button id="addBtn">Ajouter la transaction</button>
-</div>
 
+</div>
 
 <!-- FILTRES -->
 <h2>Détails des Transactions</h2>
@@ -241,14 +246,14 @@
   </select>
 </div>
 
-<!-- TABLEAU DÉTAILLÉ -->
+<!-- TABLEAU DES TRANSACTIONS -->
 <table>
   <thead>
     <tr>
       <th>Date</th>
       <th>Gang</th>
       <th>Catégorie</th>
-      <th>Nom</th>
+      <th>Objet</th>
       <th>Achat (unité)</th>
       <th>Vente (unité)</th>
       <th>Quantité</th>
@@ -262,317 +267,203 @@
 
 
 <script>
-/* ----------------------------
-  CONFIG SUPABASE
----------------------------- */
 const supabaseClient = supabase.createClient(
   "https://ldhxyloqdtplevdkgnah.supabase.co",
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxkaHh5bG9xZHRwbGV2ZGtnbmFoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEyMTg5NjAsImV4cCI6MjA3Njc5NDk2MH0.pnoppZtVEP3uDrMEfauPAMMB93EmGO5Ur1pg4OY99-o"
 );
 
-let catalogItems = [];
-let currentItems = [];
+let catalog = [];
+let transactions = [];
 
-/* ----------------------------
-  UTILITAIRE FORMAT ARGENT
----------------------------- */
-function money(n) {
-  n = Number(n || 0);
-  return "$" + n.toFixed(2);
-}
+function money(n) { return "$" + Number(n).toLocaleString("fr-FR"); }
 
-/* ----------------------------
-  CHARGEMENT CATALOGUE
----------------------------- */
 async function loadCatalog() {
-  const { data, error } = await supabaseClient
+  const { data } = await supabaseClient
     .from("catalog")
     .select("*")
-    .order("category")
-    .order("name");
+    .order("category");
 
-  if (error) {
-    console.error("Erreur catalogue", error);
-    return;
-  }
+  catalog = data || [];
 
-  catalogItems = data || [];
   const sel = document.getElementById("itemSelect");
   sel.innerHTML = '<option value="">Choisir un item</option>';
 
-  catalogItems.forEach(item => {
-    sel.innerHTML += `
-      <option value="${item.id}">
-        [${item.category}] ${item.name} (${money(item.price_buy)})
-      </option>
-    `;
+  catalog.forEach(i => {
+    sel.innerHTML += `<option value="${i.id}">
+      [${i.category}] ${i.name} — ${money(i.price_buy)}
+    </option>`;
   });
 }
 
-/* Quand on choisit un item dans le catalogue */
-document.getElementById("itemSelect").addEventListener("change", () => {
+document.getElementById("itemSelect").onchange = () => {
   const id = Number(document.getElementById("itemSelect").value);
-  const item = catalogItems.find(i => i.id === id);
+  const item = catalog.find(i => i.id === id);
 
-  const catInput = document.getElementById("itemCategory");
-  const nameInput = document.getElementById("itemName");
-  const buyInput = document.getElementById("price_buy");
-  const sellInput = document.getElementById("price_sell");
+  document.getElementById("category").value = item?.category || "";
+  document.getElementById("name").value = item?.name || "";
+  document.getElementById("price_buy").value = item?.price_buy || "";
+  document.getElementById("price_sell").value = item?.price_sell || "";
+};
 
-  if (!item) {
-    catInput.value = "";
-    nameInput.value = "";
-    buyInput.value = "";
-    sellInput.value = "";
-    return;
-  }
-
-  catInput.value = item.category;
-  nameInput.value = item.name;
-  buyInput.value = item.price_buy;
-  sellInput.value = item.price_sell;
-});
-
-/* ----------------------------
-  CHARGEMENT DES TRANSACTIONS
----------------------------- */
-async function loadItems() {
-  const { data, error } = await supabaseClient
+async function loadTransactions() {
+  const { data } = await supabaseClient
     .from("items")
-    .select("*")
+    .select("*, catalog(*)")
     .order("created_at", { ascending: false });
 
-  if (error) {
-    console.error("Erreur items", error);
-    return;
-  }
+  transactions = data || [];
 
-  currentItems = data || [];
-  renderDashboard(currentItems);
-  renderGangTable(currentItems);
-  renderCategoryTable(currentItems);
-  loadFilters(currentItems);
-  renderItemsTable(currentItems);
+  renderDashboard();
+  renderGangTable();
+  renderCategoryTable();
+  renderTransactionsTable();
+  loadFilters();
 }
 
-/* ----------------------------
-  DASHBOARD TOTALS
----------------------------- */
-function renderDashboard(items) {
-  let totalBuy = 0, totalSell = 0;
+function renderDashboard() {
+  let buy = 0, sell = 0;
 
-  items.forEach(i => {
-    totalBuy += i.price_buy * i.qty;
-    totalSell += i.price_sell * i.qty;
+  transactions.forEach(t => {
+    buy += t.catalog.price_buy * t.qty;
+    sell += t.catalog.price_sell * t.qty;
   });
 
-  const profit = totalSell - totalBuy;
+  document.getElementById("totalBuy").textContent = money(buy);
+  document.getElementById("totalSell").textContent = money(sell);
 
-  document.getElementById("totalBuy").textContent = money(totalBuy);
-  document.getElementById("totalSell").textContent = money(totalSell);
-
+  const profit = sell - buy;
   const profitEl = document.getElementById("totalProfit");
+
   profitEl.textContent = money(profit);
   profitEl.className = "value " + (profit >= 0 ? "positive" : "negative");
 }
 
-/* ----------------------------
-  TABLEAU PAR GANG
----------------------------- */
-function renderGangTable(items) {
+function renderGangTable() {
   const tbody = document.getElementById("gangTable");
   tbody.innerHTML = "";
 
   const gangs = {};
 
-  items.forEach(i => {
-    if (!gangs[i.gang]) gangs[i.gang] = { buy: 0, sell: 0, count: 0 };
-    gangs[i.gang].buy += i.price_buy * i.qty;
-    gangs[i.gang].sell += i.price_sell * i.qty;
-    gangs[i.gang].count++;
+  transactions.forEach(t => {
+    if (!gangs[t.gang]) gangs[t.gang] = { buy: 0, sell: 0, qty: 0 };
+
+    gangs[t.gang].buy += t.catalog.price_buy * t.qty;
+    gangs[t.gang].sell += t.catalog.price_sell * t.qty;
+    gangs[t.gang].qty++;
   });
 
-  Object.keys(gangs).forEach(gang => {
-    const g = gangs[gang];
-    const profit = g.sell - g.buy;
+  Object.entries(gangs).forEach(([gang, v]) => {
+    const profit = v.sell - v.buy;
     tbody.innerHTML += `
       <tr>
         <td>${gang}</td>
-        <td>${money(g.buy)}</td>
-        <td>${money(g.sell)}</td>
+        <td>${money(v.buy)}</td>
+        <td>${money(v.sell)}</td>
         <td class="${profit >= 0 ? 'positive' : 'negative'}">${money(profit)}</td>
-        <td>${g.count}</td>
+        <td>${v.qty}</td>
       </tr>
     `;
   });
 }
 
-/* ----------------------------
-  TABLEAU PAR CATEGORIE
----------------------------- */
-function renderCategoryTable(items) {
+function renderCategoryTable() {
   const tbody = document.getElementById("categoryTable");
   tbody.innerHTML = "";
 
   const cats = {};
 
-  items.forEach(i => {
-    if (!cats[i.category]) cats[i.category] = { buy: 0, sell: 0, qty: 0 };
-    cats[i.category].buy += i.price_buy * i.qty;
-    cats[i.category].sell += i.price_sell * i.qty;
-    cats[i.category].qty += i.qty;
+  transactions.forEach(t => {
+    if (!cats[t.catalog.category])
+      cats[t.catalog.category] = { buy: 0, sell: 0, qty: 0 };
+
+    cats[t.catalog.category].buy += t.catalog.price_buy * t.qty;
+    cats[t.catalog.category].sell += t.catalog.price_sell * t.qty;
+    cats[t.catalog.category].qty += t.qty;
   });
 
-  Object.keys(cats).forEach(cat => {
-    const c = cats[cat];
-    const profit = c.sell - c.buy;
+  Object.entries(cats).forEach(([cat, v]) => {
+    const profit = v.sell - v.buy;
+
     tbody.innerHTML += `
       <tr>
         <td>${cat}</td>
-        <td>${money(c.buy)}</td>
-        <td>${money(c.sell)}</td>
+        <td>${money(v.buy)}</td>
+        <td>${money(v.sell)}</td>
         <td class="${profit >= 0 ? 'positive' : 'negative'}">${money(profit)}</td>
-        <td>${c.qty}</td>
+        <td>${v.qty}</td>
       </tr>
     `;
   });
 }
 
-/* ----------------------------
-  TABLE DES TRANSACTIONS DÉTAILLÉES
----------------------------- */
-function renderItemsTable(items) {
+function loadFilters() {
+  const gangSel = document.getElementById("filterGang");
+  const catSel = document.getElementById("filterCategory");
+
+  const gangs = [...new Set(transactions.map(t => t.gang))];
+  const cats = [...new Set(transactions.map(t => t.catalog.category))];
+
+  gangSel.innerHTML = '<option value="">Filtrer par gang</option>';
+  catSel.innerHTML = '<option value="">Filtrer par catégorie</option>';
+
+  gangs.forEach(g => gangSel.innerHTML += `<option>${g}</option>`);
+  cats.forEach(c => catSel.innerHTML += `<option>${c}</option>`);
+
+  gangSel.onchange = renderTransactionsTable;
+  catSel.onchange = renderTransactionsTable;
+}
+
+function renderTransactionsTable() {
   const gangFilter = document.getElementById("filterGang").value;
   const catFilter = document.getElementById("filterCategory").value;
-
   const tbody = document.getElementById("itemsTable");
+
   tbody.innerHTML = "";
 
-  items
-    .filter(i => !gangFilter || i.gang === gangFilter)
-    .filter(i => !catFilter || i.category === catFilter)
-    .forEach(i => {
-      const totalBuy = i.price_buy * i.qty;
-      const totalSell = i.price_sell * i.qty;
-      const profit = totalSell - totalBuy;
-      const dateStr = i.created_at
-        ? new Date(i.created_at).toLocaleDateString("fr-FR")
-        : "";
+  transactions
+    .filter(t => !gangFilter || t.gang === gangFilter)
+    .filter(t => !catFilter || t.catalog.category === catFilter)
+    .forEach(t => {
+      const buy = t.catalog.price_buy * t.qty;
+      const sell = t.catalog.price_sell * t.qty;
+      const profit = sell - buy;
 
       tbody.innerHTML += `
         <tr>
-          <td>${dateStr}</td>
-          <td>
-            <select class="edit-gang" data-id="${i.id}">
-              <option ${i.gang === 'Ballas' ? 'selected' : ''}>Ballas</option>
-              <option ${i.gang === 'Vagos' ? 'selected' : ''}>Vagos</option>
-              <option ${i.gang === 'Families' ? 'selected' : ''}>Families</option>
-              <option ${i.gang === 'Marabunta' ? 'selected' : ''}>Marabunta</option>
-              <option ${i.gang === 'Bloods' ? 'selected' : ''}>Bloods</option>
-              <option ${i.gang === 'Crips' ? 'selected' : ''}>Crips</option>
-              <option ${i.gang === 'Triades' ? 'selected' : ''}>Triades</option>
-              <option ${i.gang === 'Mafia' ? 'selected' : ''}>Mafia</option>
-            </select>
-          </td>
-          <td>${i.category}</td>
-          <td>${i.name}</td>
-          <td>${money(i.price_buy)}</td>
-          <td>${money(i.price_sell)}</td>
-          <td>
-            <input
-              type="number"
-              class="edit-qty"
-              data-id="${i.id}"
-              value="${i.qty}"
-              style="width:70px"
-            >
-          </td>
-          <td>${money(totalBuy)}</td>
-          <td>${money(totalSell)}</td>
+          <td>${new Date(t.created_at).toLocaleDateString()}</td>
+          <td>${t.gang}</td>
+          <td>${t.catalog.category}</td>
+          <td>${t.catalog.name}</td>
+          <td>${money(t.catalog.price_buy)}</td>
+          <td>${money(t.catalog.price_sell)}</td>
+          <td>${t.qty}</td>
+          <td>${money(buy)}</td>
+          <td>${money(sell)}</td>
           <td class="${profit >= 0 ? 'positive' : 'negative'}">${money(profit)}</td>
         </tr>
       `;
     });
-
-  // écouteurs pour modification inline
-  document.querySelectorAll(".edit-qty").forEach(input => {
-    input.addEventListener("change", async () => {
-      const id = input.dataset.id;
-      const newQty = Number(input.value);
-      if (isNaN(newQty) || newQty < 0) {
-        alert("Quantité invalide.");
-        return;
-      }
-      await supabaseClient.from("items").update({ qty: newQty }).eq("id", id);
-      loadItems();
-    });
-  });
-
-  document.querySelectorAll(".edit-gang").forEach(select => {
-    select.addEventListener("change", async () => {
-      const id = select.dataset.id;
-      const newGang = select.value;
-      await supabaseClient.from("items").update({ gang: newGang }).eq("id", id);
-      loadItems();
-    });
-  });
 }
 
-/* ----------------------------
-  AJOUT D'UNE TRANSACTION
----------------------------- */
 document.getElementById("addBtn").onclick = async () => {
   const gang = document.getElementById("gang").value;
   const itemId = Number(document.getElementById("itemSelect").value);
   const qty = Number(document.getElementById("qty").value);
 
-  const item = catalogItems.find(i => i.id === itemId);
-
-  if (!gang || !item || isNaN(qty) || qty <= 0) {
-    return alert("Remplis correctement gang, item et quantité.");
+  if (!gang || !itemId || qty <= 0) {
+    alert("Remplis correctement toutes les informations.");
+    return;
   }
 
-  await supabaseClient.from("items").insert([{
-    catalog_id: item.id,
-    name: item.name,
-    category: item.category,
-    gang,
-    price_buy: item.price_buy,
-    price_sell: item.price_sell,
-    qty
-  }]);
+  await supabaseClient.from("items").insert([{ catalog_id: itemId, gang, qty }]);
 
-  // reset quantité seulement
   document.getElementById("qty").value = "";
-  loadItems();
+  await loadTransactions();
 };
 
-/* ----------------------------
-  FILTRES
----------------------------- */
-function loadFilters(items) {
-  const gangSel = document.getElementById("filterGang");
-  const catSel = document.getElementById("filterCategory");
-
-  const gangs = [...new Set(items.map(i => i.gang))];
-  const cats = [...new Set(items.map(i => i.category))];
-
-  gangSel.innerHTML = '<option value="">Filtrer par gang</option>';
-  catSel.innerHTML = '<option value="">Filtrer par catégorie</option>';
-
-  gangs.forEach(g => gangSel.innerHTML += `<option value="${g}">${g}</option>`);
-  cats.forEach(c => catSel.innerHTML += `<option value="${c}">${c}</option>`);
-
-  gangSel.onchange = () => renderItemsTable(currentItems);
-  catSel.onchange = () => renderItemsTable(currentItems);
-}
-
-/* ----------------------------
-  CHARGEMENT INITIAL
----------------------------- */
 (async function init() {
   await loadCatalog();
-  await loadItems();
+  await loadTransactions();
 })();
 </script>
 
