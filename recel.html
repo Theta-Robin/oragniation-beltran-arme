@@ -96,8 +96,7 @@
     }
 
     button {
-      width: 100%;
-      padding: 12px;
+      padding: 12px 18px;
       background: #8b0000;
       color: #d4af37;
       border: none;
@@ -105,7 +104,7 @@
       font-weight: bold;
       cursor: pointer;
       border-radius: 6px;
-      margin-top: 10px;
+      margin-right: 10px;
     }
 
     button:hover {
@@ -117,6 +116,13 @@
       display: flex;
       gap: 15px;
       margin-bottom: 20px;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 20px;
+      justify-content: center;
     }
 
     .flex-row {
@@ -234,14 +240,22 @@
 
 </div>
 
-<!-- FILTRES -->
+<!-- Détails des Transactions -->
 <h2>Détails des Transactions</h2>
+
+<!-- BOUTONS RESET -->
+<div class="btn-row">
+  <button id="resetAll">Reset TOUTES les quantités</button>
+  <button id="resetAboveZero">Reset uniquement les quantités > 0</button>
+</div>
+
+<!-- FILTRES -->
 <div class="filters">
   <select id="filterGang"><option value="">Filtrer par gang</option></select>
   <select id="filterCategory"><option value="">Filtrer par catégorie</option></select>
 </div>
 
-<!-- TABLE DES TRANSACTIONS -->
+<!-- TABLE TRANSACTIONS -->
 <table>
   <thead>
     <tr>
@@ -259,7 +273,6 @@
   </thead>
   <tbody id="itemsTable"></tbody>
 </table>
-
 
 <script>
 const supabaseClient = supabase.createClient(
@@ -280,9 +293,7 @@ async function loadCatalog() {
   sel.innerHTML = '<option value="">Choisir un item</option>';
 
   catalog.forEach(i => {
-    sel.innerHTML += `<option value="${i.id}">
-      [${i.category}] ${i.name} — ${money(i.price_buy)}
-    </option>`;
+    sel.innerHTML += `<option value="${i.id}">[${i.category}] ${i.name} — ${money(i.price_buy)}</option>`;
   });
 }
 
@@ -324,7 +335,6 @@ function renderDashboard() {
 
   const profit = sell - buy;
   const profitEl = document.getElementById("totalProfit");
-
   profitEl.textContent = money(profit);
   profitEl.className = "value " + (profit >= 0 ? "positive" : "negative");
 }
@@ -352,8 +362,7 @@ function renderGangTable() {
         <td>${money(v.sell)}</td>
         <td class="${profit >= 0 ? 'positive' : 'negative'}">${money(profit)}</td>
         <td>${v.qty}</td>
-      </tr>
-    `;
+      </tr>`;
   });
 }
 
@@ -374,7 +383,6 @@ function renderCategoryTable() {
 
   Object.entries(cats).forEach(([cat, v]) => {
     const profit = v.sell - v.buy;
-
     tbody.innerHTML += `
       <tr>
         <td>${cat}</td>
@@ -382,8 +390,7 @@ function renderCategoryTable() {
         <td>${money(v.sell)}</td>
         <td class="${profit >= 0 ? 'positive' : 'negative'}">${money(profit)}</td>
         <td>${v.qty}</td>
-      </tr>
-    `;
+      </tr>`;
   });
 }
 
@@ -428,29 +435,21 @@ function renderTransactionsTable() {
           <td>${money(t.catalog.price_buy)}</td>
           <td>${money(t.catalog.price_sell)}</td>
           <td>
-            <input type="number" 
-                   class="edit-qty" 
-                   data-id="${t.id}" 
-                   value="${t.qty}"
-                   style="width:70px">
+            <input type="number" class="edit-qty" data-id="${t.id}" value="${t.qty}" style="width:70px">
           </td>
           <td>${money(buy)}</td>
           <td>${money(sell)}</td>
           <td class="${profit >= 0 ? 'positive' : 'negative'}">${money(profit)}</td>
-        </tr>
-      `;
+        </tr>`;
     });
 
-  // MODIFICATION QUANTITÉ DIRECTEMENT DANS LE FILTRE
   document.querySelectorAll(".edit-qty").forEach(input => {
     input.onchange = async () => {
       const id = input.dataset.id;
       const newQty = Number(input.value);
-
       if (newQty < 0) return alert("Quantité invalide.");
 
       await supabaseClient.from("items").update({ qty: newQty }).eq("id", id);
-
       loadTransactions();
     };
   });
@@ -467,9 +466,28 @@ document.getElementById("addBtn").onclick = async () => {
   }
 
   await supabaseClient.from("items").insert([{ catalog_id: itemId, gang, qty }]);
-
   document.getElementById("qty").value = "";
-  await loadTransactions();
+  loadTransactions();
+};
+
+/* RESET TOUT */
+document.getElementById("resetAll").onclick = async () => {
+  if (!confirm("Mettre TOUTES les quantités à zéro ?")) return;
+
+  await supabaseClient.from("items").update({ qty: 0 }).neq("qty", 0);
+  loadTransactions();
+};
+
+/* RESET UNIQUEMENT qty > 0 */
+document.getElementById("resetAboveZero").onclick = async () => {
+  if (!confirm("Mettre à zéro uniquement les quantités > 0 ?")) return;
+
+  await supabaseClient
+    .from("items")
+    .update({ qty: 0 })
+    .gt("qty", 0);
+
+  loadTransactions();
 };
 
 (async function init() {
