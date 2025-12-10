@@ -130,10 +130,133 @@
       grid-template-columns: repeat(2, 1fr);
       gap: 12px;
     }
+/* ====== PIN GTA RP ====== */
+
+#pinOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 0, 0, 0.96);
+  backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999999;
+}
+
+.pin-container {
+  background: rgba(40, 0, 0, 0.55);
+  border: 2px solid #ff0000bb;
+  border-radius: 14px;
+  padding: 28px;
+  width: 300px;
+  box-shadow: 0 0 28px #ff00004d;
+  text-align: center;
+}
+
+.pin-title {
+  color: #ff4444;
+  font-size: 1.4rem;
+  margin-bottom: 4px;
+}
+
+.pin-subtitle {
+  color: #bbb;
+  font-size: 0.9rem;
+  margin-bottom: 16px;
+}
+
+.pin-dots {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.pin-dots span {
+  width: 14px;
+  height: 14px;
+  background: #222;
+  border-radius: 50%;
+  border: 1px solid #ff000066;
+}
+
+.pin-dots span.filled {
+  background: #ff1111;
+  box-shadow: 0 0 10px #ff0000;
+}
+
+.pin-pad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.pad-btn {
+  background: #220000;
+  border: 1px solid #ff3333aa;
+  color: #ff5555;
+  padding: 14px 0;
+  border-radius: 8px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: 0.15s;
+}
+
+.pad-btn:hover {
+  background: #330000;
+  transform: scale(1.06);
+  box-shadow: 0 0 12px #ff000066 inset;
+}
+
+.pad-btn:active {
+  transform: scale(0.93);
+}
+
+.pad-btn.zero {
+  grid-column: span 3;
+}
+
+.pin-error {
+  margin-top: 14px;
+  font-size: 0.85rem;
+  color: #ff2222;
+  opacity: 0;
+  transition: 0.25s ease;
+}
 
   </style>
 </head>
 <body>
+<!-- ==== ECRAN PIN SECURITE GTA RP ==== -->
+<div id="pinOverlay">
+  <div class="pin-container">
+    <h2 class="pin-title">🔒 ACCÈS PROTÉGÉ</h2>
+    <p class="pin-subtitle">Veuillez entrer votre code</p>
+
+    <div class="pin-dots">
+      <span></span><span></span><span></span><span></span>
+    </div>
+
+    <div class="pin-pad">
+      <button class="pad-btn">1</button>
+      <button class="pad-btn">2</button>
+      <button class="pad-btn">3</button>
+
+      <button class="pad-btn">4</button>
+      <button class="pad-btn">5</button>
+      <button class="pad-btn">6</button>
+
+      <button class="pad-btn">7</button>
+      <button class="pad-btn">8</button>
+      <button class="pad-btn">9</button>
+
+      <button class="pad-btn zero">0</button>
+    </div>
+
+    <p id="pinError" class="pin-error">Code incorrect</p>
+  </div>
+</div>
+<!-- ==== FIN SECURITE ==== -->
 
 <h1>RECEL BUSINESS — BELTRAN LEYVA</h1>
 
@@ -275,6 +398,40 @@
 </table>
 
 <script>
+  const CORRECT_PIN = "1510";
+  let pin = "";
+
+  const overlay = document.getElementById("pinOverlay");
+  const dots = document.querySelectorAll(".pin-dots span");
+  const errorMsg = document.getElementById("pinError");
+
+  document.querySelectorAll(".pad-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      if (pin.length >= 4) return;
+
+      pin += btn.textContent;
+      dots[pin.length - 1].classList.add("filled");
+
+      if (pin.length === 4) {
+        if (pin === CORRECT_PIN) {
+          overlay.style.opacity = "0";
+          overlay.style.transition = "0.7s ease";
+          setTimeout(() => overlay.remove(), 700);
+        } else {
+          errorMsg.style.opacity = 1;
+
+          dots.forEach(d => d.classList.remove("filled"));
+
+          setTimeout(() => {
+            errorMsg.style.opacity = 0;
+          }, 1400);
+
+          pin = "";
+        }
+      }
+    });
+  });
+
 const supabaseClient = supabase.createClient(
   "https://ldhxyloqdtplevdkgnah.supabase.co",
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxkaHh5bG9xZHRwbGV2ZGtnbmFoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEyMTg5NjAsImV4cCI6MjA3Njc5NDk2MH0.pnoppZtVEP3uDrMEfauPAMMB93EmGO5Ur1pg4OY99-o"
