@@ -178,7 +178,7 @@
 </table>
 
 <!-- AJOUT TRANSACTION -->
-<h2>Ajouter un achat (collaborateur → gang)</h2>
+<h2>Ajouter un achat</h2>
 <div class="form-container">
 
   <div class="flex-row">
@@ -218,11 +218,11 @@
 
   <div class="flex-row">
     <div>
-      <label>Prix Achat Collaborateur</label>
+      <label>Prix Achat</label>
       <input id="price_buy" readonly>
     </div>
     <div>
-      <label>Prix Vente (Recel)</label>
+      <label>Prix Vente</label>
       <input id="price_sell" readonly>
     </div>
   </div>
@@ -237,16 +237,11 @@
 <!-- FILTRES -->
 <h2>Détails des Transactions</h2>
 <div class="filters">
-  <select id="filterGang">
-    <option value="">Filtrer par gang</option>
-  </select>
-
-  <select id="filterCategory">
-    <option value="">Filtrer par catégorie</option>
-  </select>
+  <select id="filterGang"><option value="">Filtrer par gang</option></select>
+  <select id="filterCategory"><option value="">Filtrer par catégorie</option></select>
 </div>
 
-<!-- TABLEAU DES TRANSACTIONS -->
+<!-- TABLE DES TRANSACTIONS -->
 <table>
   <thead>
     <tr>
@@ -278,11 +273,7 @@ let transactions = [];
 function money(n) { return "$" + Number(n).toLocaleString("fr-FR"); }
 
 async function loadCatalog() {
-  const { data } = await supabaseClient
-    .from("catalog")
-    .select("*")
-    .order("category");
-
+  const { data } = await supabaseClient.from("catalog").select("*").order("category");
   catalog = data || [];
 
   const sel = document.getElementById("itemSelect");
@@ -316,8 +307,8 @@ async function loadTransactions() {
   renderDashboard();
   renderGangTable();
   renderCategoryTable();
-  renderTransactionsTable();
   loadFilters();
+  renderTransactionsTable();
 }
 
 function renderDashboard() {
@@ -436,13 +427,33 @@ function renderTransactionsTable() {
           <td>${t.catalog.name}</td>
           <td>${money(t.catalog.price_buy)}</td>
           <td>${money(t.catalog.price_sell)}</td>
-          <td>${t.qty}</td>
+          <td>
+            <input type="number" 
+                   class="edit-qty" 
+                   data-id="${t.id}" 
+                   value="${t.qty}"
+                   style="width:70px">
+          </td>
           <td>${money(buy)}</td>
           <td>${money(sell)}</td>
           <td class="${profit >= 0 ? 'positive' : 'negative'}">${money(profit)}</td>
         </tr>
       `;
     });
+
+  // MODIFICATION QUANTITÉ DIRECTEMENT DANS LE FILTRE
+  document.querySelectorAll(".edit-qty").forEach(input => {
+    input.onchange = async () => {
+      const id = input.dataset.id;
+      const newQty = Number(input.value);
+
+      if (newQty < 0) return alert("Quantité invalide.");
+
+      await supabaseClient.from("items").update({ qty: newQty }).eq("id", id);
+
+      loadTransactions();
+    };
+  });
 }
 
 document.getElementById("addBtn").onclick = async () => {
