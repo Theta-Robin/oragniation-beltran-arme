@@ -7,8 +7,6 @@
 
   <!-- Supabase JS v2 -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <!-- Chart.js pour les graphiques -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
     * {
@@ -409,10 +407,6 @@
       cursor: pointer;
     }
 
-    .priority-low { color: #22c55e; }
-    .priority-medium { color: #facc15; }
-    .priority-high { color: #f97316; }
-
     /* Inventory */
     .inventory-table-wrapper {
       max-height: 220px;
@@ -441,69 +435,134 @@
     .inv-high {
       background: rgba(34,197,94,0.35);
     }
+    /* ====== PIN GTA RP ====== */
 
-    /* Stats (gardés pour compat mais section masquée) */
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: 10px;
-    }
+#pinOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 0, 0, 0.96);
+  backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999999;
+}
 
-    .stat-card {
-      padding: 10px;
-      border-radius: 12px;
-      border: 1px solid #1f2937;
-      background: radial-gradient(circle at top left, rgba(56,189,248,0.2), transparent 60%),
-                  #020617;
-      font-size: 0.8rem;
-    }
+.pin-container {
+  background: rgba(40, 0, 0, 0.55);
+  border: 2px solid #ff0000bb;
+  border-radius: 14px;
+  padding: 28px;
+  width: 300px;
+  box-shadow: 0 0 28px #ff00004d;
+  text-align: center;
+}
 
-    .stat-label {
-      color: #9ca3af;
-      margin-bottom: 4px;
-    }
+.pin-title {
+  color: #ff4444;
+  font-size: 1.4rem;
+  margin-bottom: 4px;
+}
 
-    .stat-value {
-      font-size: 1.1rem;
-      font-weight: 600;
-    }
+.pin-subtitle {
+  color: #bbb;
+  font-size: 0.9rem;
+  margin-bottom: 16px;
+}
 
-    /* Logs */
-    .logs-list {
-      max-height: 160px;
-      overflow: auto;
-      font-size: 0.75rem;
-    }
+.pin-dots {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 18px;
+}
 
-    .log-item {
-      padding: 4px 6px;
-      border-bottom: 1px solid #111827;
-      color: #9ca3af;
-    }
+.pin-dots span {
+  width: 14px;
+  height: 14px;
+  background: #222;
+  border-radius: 50%;
+  border: 1px solid #ff000066;
+}
 
-    .log-item:last-child {
-      border-bottom: none;
-    }
+.pin-dots span.filled {
+  background: #ff1111;
+  box-shadow: 0 0 10px #ff0000;
+}
 
-    .log-time {
-      color: #6b7280;
-      margin-right: 4px;
-    }
+.pin-pad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
 
-    .log-type {
-      text-transform: uppercase;
-      font-weight: 600;
-      margin-right: 4px;
-    }
+.pad-btn {
+  background: #220000;
+  border: 1px solid #ff3333aa;
+  color: #ff5555;
+  padding: 14px 0;
+  border-radius: 8px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: 0.15s;
+}
 
-    .log-type-edit { color: #38bdf8; }
-    .log-type-task { color: #22c55e; }
-    .log-type-inv { color: #facc15; }
-    .log-type-table { color: #a855f7; }
-    .log-type-import { color: #f97316; }
+.pad-btn:hover {
+  background: #330000;
+  transform: scale(1.06);
+  box-shadow: 0 0 12px #ff000066 inset;
+}
+
+.pad-btn:active {
+  transform: scale(0.93);
+}
+
+.pad-btn.zero {
+  grid-column: span 3;
+}
+
+.pin-error {
+  margin-top: 14px;
+  font-size: 0.85rem;
+  color: #ff2222;
+  opacity: 0;
+  transition: 0.25s ease;
+}
+
   </style>
 </head>
 <body>
+  <!-- ==== ECRAN PIN SECURITE GTA RP ==== -->
+<div id="pinOverlay">
+  <div class="pin-container">
+    <h2 class="pin-title">🔒 ACCÈS PROTÉGÉ</h2>
+    <p class="pin-subtitle">Veuillez entrer votre code</p>
+
+    <div class="pin-dots">
+      <span></span><span></span><span></span><span></span>
+    </div>
+
+    <div class="pin-pad">
+      <button class="pad-btn">1</button>
+      <button class="pad-btn">2</button>
+      <button class="pad-btn">3</button>
+
+      <button class="pad-btn">4</button>
+      <button class="pad-btn">5</button>
+      <button class="pad-btn">6</button>
+
+      <button class="pad-btn">7</button>
+      <button class="pad-btn">8</button>
+      <button class="pad-btn">9</button>
+
+      <button class="pad-btn zero">0</button>
+    </div>
+
+    <p id="pinError" class="pin-error">Code incorrect</p>
+  </div>
+</div>
+<!-- ==== FIN SECURITE ==== -->
+
   <div class="app">
     <!-- PANNEAU GAUCHE -->
     <aside class="panel">
@@ -569,7 +628,7 @@
       <div class="field-group">
         <label>Zones de texte libres</label>
         <p class="small-hint" style="margin-bottom:6px;">
-          Pour écrire des notes, explications, consignes RP, etc.
+          Pour écrire des notes, explications, consignes, etc.
         </p>
         <button class="btn-secondary btn-block" type="button" id="addNoteBtn">
           + Ajouter une zone de texte
@@ -677,26 +736,48 @@
     </div>
   </div>
 
-  <!-- Conteneur caché pour garder les éléments nécessaires au JS (stats / logs / graphique) -->
-  <div style="display:none">
-    <div class="stats-grid" id="statsGrid">
-      <div class="stat-card"><div class="stat-label">Nombre de tableaux</div><div class="stat-value" id="statTables"></div></div>
-      <div class="stat-card"><div class="stat-label">Tâches (faites / total)</div><div class="stat-value"><span id="statTasksDone"></span>/<span id="statTasksTotal"></span></div></div>
-      <div class="stat-card"><div class="stat-label">Articles inventaire</div><div class="stat-value" id="statItemsCount"></div></div>
-      <div class="stat-card"><div class="stat-label">Quantité totale</div><div class="stat-value" id="statItemsQty"></div></div>
-    </div>
-    <div class="logs-list" id="logsList"></div>
-    <canvas id="inventoryChart" height="130"></canvas>
-  </div>
-
   <script>
-    // ⚠️ Clés Supabase (clé anonyme = ok côté navigateur)
+    const CORRECT_PIN = "6554";
+  let pin = "";
+
+  const overlay = document.getElementById("pinOverlay");
+  const dots = document.querySelectorAll(".pin-dots span");
+  const errorMsg = document.getElementById("pinError");
+
+  document.querySelectorAll(".pad-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      if (pin.length >= 4) return;
+
+      pin += btn.textContent;
+      dots[pin.length - 1].classList.add("filled");
+
+      if (pin.length === 4) {
+        if (pin === CORRECT_PIN) {
+          overlay.style.opacity = "0";
+          overlay.style.transition = "0.7s ease";
+          setTimeout(() => overlay.remove(), 700);
+        } else {
+          errorMsg.style.opacity = 1;
+
+          dots.forEach(d => d.classList.remove("filled"));
+
+          setTimeout(() => {
+            errorMsg.style.opacity = 0;
+          }, 1400);
+
+          pin = "";
+        }
+      }
+    });
+  });
+
     const SUPABASE_URL = 'https://ldhxyloqdtplevdkgnah.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxkaHh5bG9xZHRwbGV2ZGtnbmFoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEyMTg5NjAsImV4cCI6MjA3Njc5NDk2MH0.pnoppZtVEP3uDrMEfauPAMMB93EmGO5Ur1pg4OY99-o';
+    const SUPABASE_ANON_KEY =
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxkaHh5bG9xZHRwbGV2ZGtnbmFoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEyMTg5NjAsImV4cCI6MjA3Njc5NDk2MH0.pnoppZtVEP3uDrMEfauPAMMB93EmGO5Ur1pg4OY99-o';
 
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     const PAGE_ID = 1;
-    const POLL_INTERVAL_MS = 5000; // 5 secondes
+    const POLL_INTERVAL_MS = 5000;
 
     const addTableBtn = document.getElementById('addTableBtn');
     const rowsInput = document.getElementById('rowsInput');
@@ -723,14 +804,6 @@
     const addInventoryBtn = document.getElementById('addInventoryBtn');
     const inventoryBadge = document.getElementById('inventoryBadge');
 
-    const statTables = document.getElementById('statTables');
-    const statTasksDone = document.getElementById('statTasksDone');
-    const statTasksTotal = document.getElementById('statTasksTotal');
-    const statItemsCount = document.getElementById('statItemsCount');
-    const statItemsQty = document.getElementById('statItemsQty');
-
-    const logsList = document.getElementById('logsList');
-
     const exportBtn = document.getElementById('exportBtn');
     const importInput = document.getElementById('importInput');
 
@@ -738,43 +811,13 @@
     let lastUpdatedAt = null;
     let lastLocalEditTime = 0;
     let isSaving = false;
-    let inventoryChartInstance = null;
-
-    /* ---------- UI HELPERS ---------- */
 
     function setStatus(text) {
       if (!statusBar) return;
       statusBar.textContent = text;
     }
 
-    function formatDateTime(d) {
-      const pad = (n) => String(n).padStart(2, '0');
-      return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
-    }
-
-    function addLog(type, message) {
-      const now = new Date();
-      const item = document.createElement('div');
-      item.className = 'log-item';
-      const spanTime = document.createElement('span');
-      spanTime.className = 'log-time';
-      spanTime.textContent = `[${formatDateTime(now)}]`;
-      const spanType = document.createElement('span');
-      spanType.className = 'log-type log-type-' + type;
-      spanType.textContent = type;
-      const spanMsg = document.createElement('span');
-      spanMsg.textContent = message;
-      item.appendChild(spanTime);
-      item.appendChild(spanType);
-      item.appendChild(spanMsg);
-      logsList.prepend(item);
-      const all = logsList.querySelectorAll('.log-item');
-      if (all.length > 100) {
-        all[all.length - 1].remove();
-      }
-    }
-
-    /* ---------- NOTES ---------- */
+    /* ---------- ZONES DE TEXTE ---------- */
     function createNote(content) {
       const block = document.createElement('div');
       block.className = 'note-block';
@@ -846,7 +889,6 @@
         if (!tablesArea.querySelector('.table-wrapper')) {
           emptyState.style.display = 'block';
         }
-        addLog('table', 'Tableau supprimé');
         markEditedAndSave();
       });
 
@@ -1018,8 +1060,6 @@
         if (chk && chk.checked) doneCount++;
       });
       tasksBadge.textContent = `${doneCount} / ${total} terminées`;
-      if (statTasksDone) statTasksDone.textContent = doneCount;
-      if (statTasksTotal) statTasksTotal.textContent = total;
     }
 
     /* ---------- INVENTAIRE ---------- */
@@ -1079,7 +1119,6 @@
     function updateInventoryColorsAndStats() {
       const rows = inventoryBody.querySelectorAll('.inventory-row');
       let itemsCount = 0;
-      let totalQty = 0;
       rows.forEach(row => {
         const tds = row.querySelectorAll('td');
         const qtyVal = parseFloat(tds[2].querySelector('input').value || '0');
@@ -1090,7 +1129,6 @@
 
         if (!isNaN(qtyVal)) {
           itemsCount++;
-          totalQty += qtyVal;
           if (!isNaN(minVal) && qtyVal < minVal) {
             row.classList.add('inv-low');
           } else if (!isNaN(maxVal) && qtyVal > maxVal) {
@@ -1101,52 +1139,6 @@
         }
       });
       inventoryBadge.textContent = `${itemsCount} articles`;
-      if (statItemsCount) statItemsCount.textContent = itemsCount;
-      if (statItemsQty) statItemsQty.textContent = totalQty;
-
-      updateInventoryChart();
-    }
-
-    function updateInventoryChart() {
-      if (!window.Chart) return;
-      const rows = inventoryBody.querySelectorAll('.inventory-row');
-      const labels = [];
-      const data = [];
-      rows.forEach(row => {
-        const tds = row.querySelectorAll('td');
-        const name = tds[0].querySelector('input').value || 'Sans nom';
-        const qtyVal = parseFloat(tds[2].querySelector('input').value || '0');
-        labels.push(name);
-        data.push(isNaN(qtyVal) ? 0 : qtyVal);
-      });
-
-      const canvas = document.getElementById('inventoryChart');
-      if (!canvas) return;
-      const ctx = canvas.getContext('2d');
-      if (inventoryChartInstance) {
-        inventoryChartInstance.destroy();
-      }
-      inventoryChartInstance = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels,
-          datasets: [{
-            label: 'Quantité',
-            data
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false }
-          },
-          scales: {
-            x: { ticks: { color: '#e5e7eb' }, grid: { color: '#111827' } },
-            y: { ticks: { color: '#e5e7eb' }, grid: { color: '#111827' } }
-          }
-        }
-      });
     }
 
     /* ---------- SERIALISATION DE L'ÉTAT ---------- */
@@ -1159,8 +1151,7 @@
         tables: [],
         notes: [],
         tasks: [],
-        inventory: [],
-        logs: []
+        inventory: []
       };
 
       // Tables
@@ -1236,30 +1227,21 @@
         data.inventory.push({ name, category, quantity, min, max });
       });
 
-      // Logs
-      const logItems = logsList.querySelectorAll('.log-item');
-      logItems.forEach(li => {
-        data.logs.push({ text: li.textContent });
-      });
-
       return data;
     }
 
     function renderState(content) {
       if (!content) return;
 
-      // Seuils par défaut
       if (content.thresholds) {
         redThresholdInput.value = content.thresholds.red || '';
         greenThresholdInput.value = content.thresholds.green || '';
       }
 
-      // Nettoyer tout
       tablesArea.querySelectorAll('.table-wrapper').forEach(w => w.remove());
       notesArea.querySelectorAll('.note-block').forEach(n => n.remove());
       tasksList.innerHTML = '';
       inventoryBody.innerHTML = '';
-      logsList.innerHTML = '';
 
       // Notes
       if (content.notes && content.notes.length) {
@@ -1339,25 +1321,9 @@
         content.inventory.forEach(i => createInventoryRow(i));
       }
 
-      // Logs
-      if (content.logs && content.logs.length) {
-        content.logs.forEach(l => {
-          const li = document.createElement('div');
-          li.className = 'log-item';
-          li.textContent = l.text;
-          logsList.appendChild(li);
-        });
-      }
-
       applyAutoColors();
       updateTasksBadge();
       updateInventoryColorsAndStats();
-      updateStatsTablesCount();
-    }
-
-    function updateStatsTablesCount() {
-      const count = tablesArea.querySelectorAll('.table-wrapper').length;
-      if (statTables) statTables.textContent = count;
     }
 
     /* ---------- SUPABASE : CHARGER / SAUVER ---------- */
@@ -1476,8 +1442,6 @@
 
       createTable(rows, cols, title, { globalThresholds });
       applyAutoColors();
-      updateStatsTablesCount();
-      addLog('table', `Nouveau tableau créé (${rows}x${cols})`);
       markEditedAndSave();
     });
 
@@ -1489,7 +1453,6 @@
         e.target.matches('.table-title[contenteditable="true"]')
       ) {
         applyAutoColors();
-        addLog('edit', 'Modification de tableau');
         markEditedAndSave();
       }
     });
@@ -1508,13 +1471,13 @@
           'Valeur rouge : la case devient ROUGE si la valeur est STRICTEMENT inférieure à...',
           currentRed
         );
-        if (newRed === null) return; // annulé
+        if (newRed === null) return;
 
         const newGreen = prompt(
           'Valeur verte : la case devient VERTE si la valeur est STRICTEMENT supérieure à...',
           currentGreen
         );
-        if (newGreen === null) return; // annulé
+        if (newGreen === null) return;
 
         th.dataset.red = newRed.trim();
         th.dataset.green = newGreen.trim();
@@ -1526,7 +1489,6 @@
         }
 
         applyAutoColors();
-        addLog('table', 'Configuration de colonne modifiée');
         markEditedAndSave();
         return;
       }
@@ -1553,21 +1515,18 @@
         cell.style.outline = 'none';
       });
       selectedCells.clear();
-      addLog('edit', 'Couleur manuelle appliquée sur des cellules');
       markEditedAndSave();
     });
 
     // Ajout de note
     addNoteBtn.addEventListener('click', () => {
       createNote('');
-      addLog('edit', 'Nouvelle zone de texte créée');
       markEditedAndSave();
     });
 
     // Saisie dans notes
     notesArea.addEventListener('input', (e) => {
       if (e.target.matches('.note-body[contenteditable="true"]')) {
-        addLog('edit', 'Zone de texte modifiée');
         markEditedAndSave();
       }
     });
@@ -1580,7 +1539,6 @@
         if (!notesArea.querySelector('.note-block')) {
           notesEmpty.style.display = 'block';
         }
-        addLog('edit', 'Zone de texte supprimée');
         markEditedAndSave();
       }
     });
@@ -1589,20 +1547,17 @@
     addTaskBtn.addEventListener('click', () => {
       createTaskRow({ title: '', done: false, priority: 'low' });
       updateTasksBadge();
-      addLog('task', 'Nouvelle tâche ajoutée');
       markEditedAndSave();
     });
 
     // Gestion tâches
     tasksList.addEventListener('input', () => {
       updateTasksBadge();
-      addLog('task', 'Tâche modifiée');
       markEditedAndSave();
     });
 
     tasksList.addEventListener('change', () => {
       updateTasksBadge();
-      addLog('task', 'Tâche modifiée');
       markEditedAndSave();
     });
 
@@ -1611,7 +1566,6 @@
         const row = e.target.closest('.task-row');
         if (row) row.remove();
         updateTasksBadge();
-        addLog('task', 'Tâche supprimée');
         markEditedAndSave();
       }
     });
@@ -1620,14 +1574,12 @@
     addInventoryBtn.addEventListener('click', () => {
       createInventoryRow({ name: '', category: '', quantity: '', min: '', max: '' });
       updateInventoryColorsAndStats();
-      addLog('inv', 'Nouvel article inventaire ajouté');
       markEditedAndSave();
     });
 
     // Gestion inventaire
     inventoryBody.addEventListener('input', () => {
       updateInventoryColorsAndStats();
-      addLog('inv', 'Inventaire modifié');
       markEditedAndSave();
     });
 
@@ -1636,20 +1588,13 @@
         const row = e.target.closest('.inventory-row');
         if (row) row.remove();
         updateInventoryColorsAndStats();
-        addLog('inv', 'Article inventaire supprimé');
         markEditedAndSave();
       }
     });
 
-    // Seuils par défaut
-    redThresholdInput.addEventListener('input', () => {
-      addLog('edit', 'Seuil par défaut rouge modifié');
-      markEditedAndSave();
-    });
-    greenThresholdInput.addEventListener('input', () => {
-      addLog('edit', 'Seuil par défaut vert modifié');
-      markEditedAndSave();
-    });
+    // Seuils par défaut (juste sauvegardés)
+    redThresholdInput.addEventListener('input', markEditedAndSave);
+    greenThresholdInput.addEventListener('input', markEditedAndSave);
 
     // Export / Import
     exportBtn.addEventListener('click', () => {
@@ -1663,7 +1608,6 @@
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
-      addLog('import', 'Export JSON effectué');
     });
 
     importInput.addEventListener('change', (e) => {
@@ -1674,7 +1618,6 @@
         try {
           const json = JSON.parse(ev.target.result);
           renderState(json);
-          addLog('import', 'Import JSON appliqué (non encore sauvegardé sur Supabase)');
           markEditedAndSave();
         } catch (err) {
           alert('Erreur lors de la lecture du JSON');
