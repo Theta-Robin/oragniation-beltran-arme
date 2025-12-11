@@ -601,16 +601,46 @@ function renderTransactionsTable() {
         </tr>`;
     });
 
-  document.querySelectorAll(".edit-qty").forEach(input => {
-    input.onchange = async () => {
-      const id = input.dataset.id;
-      const newQty = Number(input.value);
-      if (newQty < 0) return alert("Quantité invalide.");
+document.querySelectorAll(".edit-qty").forEach(input => {
+  input.onchange = async () => {
+    const id = input.dataset.id;
+    const newQty = Number(input.value);
 
-      await supabaseClient.from("items").update({ qty: newQty }).eq("id", id);
-      loadTransactions();
-    };
-  });
+    if (newQty < 0) return alert("Quantité invalide.");
+
+    const { error } = await supabaseClient
+      .from("items")
+      .update({ qty: newQty })
+      .eq("id", id);
+
+    if (error) {
+      alert("Erreur : " + error.message);
+      return;
+    }
+
+    // Mise à jour locale immédiate (PAS DE RELOAD)
+    const row = input.closest("tr");
+
+    const priceBuy = Number(
+      row.children[4].textContent.replace(/\$/g, "").replace(/\./g, "").replace(/,/g, "")
+    );
+
+    const priceSell = Number(
+      row.children[5].textContent.replace(/\$/g, "").replace(/\./g, "").replace(/,/g, "")
+    );
+
+    const totalBuy = priceBuy * newQty;
+    const totalSell = priceSell * newQty;
+    const profit = totalSell - totalBuy;
+
+    row.children[7].textContent = money(totalBuy);
+    row.children[8].textContent = money(totalSell);
+    row.children[9].textContent = money(profit);
+
+    row.children[9].className = profit >= 0 ? "positive" : "negative";
+  };
+});
+
 }
 
 document.getElementById("addBtn").onclick = async () => {
