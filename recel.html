@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Beltran Leyva — Recel Business Dashboard</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -25,7 +25,7 @@
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 18px;
-      margin-bottom: 40px;
+      margin-bottom: 26px;
     }
 
     .card {
@@ -51,6 +51,13 @@
     .positive { color: #29ff78; }
     .negative { color: #ff4949; }
 
+    .hint {
+      text-align: center;
+      opacity: 0.8;
+      font-size: 13px;
+      margin: 0 0 22px;
+    }
+
     table {
       width: 100%;
       border-collapse: collapse;
@@ -65,19 +72,29 @@
       color: #d4af37;
       padding: 10px;
       border: 1px solid #333;
+      text-align: left;
     }
 
     td {
       padding: 8px;
       border: 1px solid #333;
+      vertical-align: middle;
     }
 
     .form-container {
       background: #1b1b1b;
       padding: 20px;
       border-radius: 8px;
-      margin-bottom: 40px;
+      margin-bottom: 26px;
       border: 1px solid #333;
+    }
+
+    .section-title {
+      margin-top: 20px;
+      margin-bottom: 10px;
+      font-weight: 700;
+      color: #d4af37;
+      text-shadow: 0 0 8px #000;
     }
 
     input, select {
@@ -88,6 +105,7 @@
       border: 1px solid #444;
       border-radius: 5px;
       margin-bottom: 12px;
+      outline: none;
     }
 
     input[readonly] {
@@ -123,6 +141,7 @@
       gap: 15px;
       margin-bottom: 20px;
       justify-content: center;
+      flex-wrap: wrap;
     }
 
     .flex-row {
@@ -130,563 +149,977 @@
       grid-template-columns: repeat(2, 1fr);
       gap: 12px;
     }
-/* ====== PIN GTA RP ====== */
 
-#pinOverlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(10, 0, 0, 0.96);
-  backdrop-filter: blur(4px);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 9999999;
-}
+    .flex-row-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+    }
 
-.pin-container {
-  background: rgba(40, 0, 0, 0.55);
-  border: 2px solid #ff0000bb;
-  border-radius: 14px;
-  padding: 28px;
-  width: 300px;
-  box-shadow: 0 0 28px #ff00004d;
-  text-align: center;
-}
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 999px;
+      border: 1px solid #444;
+      background: #101010;
+      color: #d4af37;
+      font-size: 12px;
+    }
 
-.pin-title {
-  color: #ff4444;
-  font-size: 1.4rem;
-  margin-bottom: 4px;
-}
+    /* ====== PIN GTA RP ====== */
+    #pinOverlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(10, 0, 0, 0.96);
+      backdrop-filter: blur(4px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999999;
+    }
 
-.pin-subtitle {
-  color: #bbb;
-  font-size: 0.9rem;
-  margin-bottom: 16px;
-}
+    .pin-container {
+      background: rgba(40, 0, 0, 0.55);
+      border: 2px solid #ff0000bb;
+      border-radius: 14px;
+      padding: 28px;
+      width: 300px;
+      box-shadow: 0 0 28px #ff00004d;
+      text-align: center;
+    }
 
-.pin-dots {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  margin-bottom: 18px;
-}
+    .pin-title {
+      color: #ff4444;
+      font-size: 1.4rem;
+      margin-bottom: 4px;
+    }
 
-.pin-dots span {
-  width: 14px;
-  height: 14px;
-  background: #222;
-  border-radius: 50%;
-  border: 1px solid #ff000066;
-}
+    .pin-subtitle {
+      color: #bbb;
+      font-size: 0.9rem;
+      margin-bottom: 16px;
+    }
 
-.pin-dots span.filled {
-  background: #ff1111;
-  box-shadow: 0 0 10px #ff0000;
-}
+    .pin-dots {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
 
-.pin-pad {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-}
+    .pin-dots span {
+      width: 14px;
+      height: 14px;
+      background: #222;
+      border-radius: 50%;
+      border: 1px solid #ff000066;
+    }
 
-.pad-btn {
-  background: #220000;
-  border: 1px solid #ff3333aa;
-  color: #ff5555;
-  padding: 14px 0;
-  border-radius: 8px;
-  font-size: 1.2rem;
-  cursor: pointer;
-  transition: 0.15s;
-}
+    .pin-dots span.filled {
+      background: #ff1111;
+      box-shadow: 0 0 10px #ff0000;
+    }
 
-.pad-btn:hover {
-  background: #330000;
-  transform: scale(1.06);
-  box-shadow: 0 0 12px #ff000066 inset;
-}
+    .pin-pad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
 
-.pad-btn:active {
-  transform: scale(0.93);
-}
+    .pad-btn {
+      background: #220000;
+      border: 1px solid #ff3333aa;
+      color: #ff5555;
+      padding: 14px 0;
+      border-radius: 8px;
+      font-size: 1.2rem;
+      cursor: pointer;
+      transition: 0.15s;
+    }
 
-.pad-btn.zero {
-  grid-column: span 3;
-}
+    .pad-btn:hover {
+      background: #330000;
+      transform: scale(1.06);
+      box-shadow: 0 0 12px #ff000066 inset;
+    }
 
-.pin-error {
-  margin-top: 14px;
-  font-size: 0.85rem;
-  color: #ff2222;
-  opacity: 0;
-  transition: 0.25s ease;
-}
+    .pad-btn:active { transform: scale(0.93); }
 
+    .pad-btn.zero { grid-column: span 3; }
+
+    .pin-error {
+      margin-top: 14px;
+      font-size: 0.85rem;
+      color: #ff2222;
+      opacity: 0;
+      transition: 0.25s ease;
+    }
+
+    .muted {
+      opacity: 0.8;
+      font-size: 13px;
+    }
+
+    .mini {
+      font-size: 12px;
+      opacity: 0.8;
+    }
+
+    .row-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .danger {
+      background: #3a0000 !important;
+      color: #ffaaaa !important;
+      border: 1px solid #ff4444aa;
+    }
+
+    .danger:hover {
+      background: #ff4444 !important;
+      color: #2b0000 !important;
+    }
   </style>
+
+  <!--
+  ============================
+  ✅ IMPORTANT (SUPABASE) — POUR AVOIR "PLUSIEURS COMMANDES PAR GANG"
+  À exécuter UNE FOIS dans Supabase (SQL Editor) :
+
+  create table if not exists recel_orders (
+    id bigserial primary key,
+    gang text not null,
+    label text,
+    order_date date not null default current_date,
+    created_at timestamptz not null default now()
+  );
+
+  alter table items
+    add column if not exists order_id bigint;
+
+  alter table items
+    add constraint if not exists items_order_id_fkey
+    foreign key (order_id) references recel_orders(id) on delete set null;
+
+  -- (Optionnel mais conseillé) index
+  create index if not exists idx_items_order_id on items(order_id);
+  create index if not exists idx_recel_orders_gang_date on recel_orders(gang, order_date);
+  ============================
+  -->
 </head>
+
 <body>
-<!-- ==== ECRAN PIN SECURITE GTA RP ==== -->
-<div id="pinOverlay">
-  <div class="pin-container">
-    <h2 class="pin-title">🔒 ACCÈS PROTÉGÉ</h2>
-    <p class="pin-subtitle">Veuillez entrer votre code</p>
+  <!-- ==== ECRAN PIN SECURITE GTA RP ==== -->
+  <div id="pinOverlay">
+    <div class="pin-container">
+      <h2 class="pin-title">🔒 ACCÈS PROTÉGÉ</h2>
+      <p class="pin-subtitle">Veuillez entrer votre code</p>
 
-    <div class="pin-dots">
-      <span></span><span></span><span></span><span></span>
+      <div class="pin-dots">
+        <span></span><span></span><span></span><span></span>
+      </div>
+
+      <div class="pin-pad">
+        <button class="pad-btn">1</button>
+        <button class="pad-btn">2</button>
+        <button class="pad-btn">3</button>
+
+        <button class="pad-btn">4</button>
+        <button class="pad-btn">5</button>
+        <button class="pad-btn">6</button>
+
+        <button class="pad-btn">7</button>
+        <button class="pad-btn">8</button>
+        <button class="pad-btn">9</button>
+
+        <button class="pad-btn zero">0</button>
+      </div>
+
+      <p id="pinError" class="pin-error">Code incorrect</p>
     </div>
+  </div>
+  <!-- ==== FIN SECURITE ==== -->
 
-    <div class="pin-pad">
-      <button class="pad-btn">1</button>
-      <button class="pad-btn">2</button>
-      <button class="pad-btn">3</button>
+  <h1>RECEL BUSINESS — BELTRAN LEYVA</h1>
+  <p class="hint">
+    ✅ Tu peux maintenant créer une <b>COMMANDE</b> par gang (Dimanche / Aujourd’hui / Demain…), et le site te calcule
+    <b>chaque commande + le cumul</b> sans te casser la tête.
+  </p>
 
-      <button class="pad-btn">4</button>
-      <button class="pad-btn">5</button>
-      <button class="pad-btn">6</button>
-
-      <button class="pad-btn">7</button>
-      <button class="pad-btn">8</button>
-      <button class="pad-btn">9</button>
-
-      <button class="pad-btn zero">0</button>
+  <!-- DASHBOARD -->
+  <div class="dashboard-grid">
+    <div class="card">
+      <div class="card-title">Total Achat (toutes commandes)</div>
+      <div id="totalBuy" class="value">$0</div>
     </div>
-
-    <p id="pinError" class="pin-error">Code incorrect</p>
-  </div>
-</div>
-<!-- ==== FIN SECURITE ==== -->
-
-<h1>RECEL BUSINESS — BELTRAN LEYVA</h1>
-
-<!-- DASHBOARD -->
-<div class="dashboard-grid">
-  <div class="card">
-    <div class="card-title">Total Achat (gangs)</div>
-    <div id="totalBuy" class="value">$0</div>
-  </div>
-  <div class="card">
-    <div class="card-title">Valeur Vente (recel)</div>
-    <div id="totalSell" class="value">$0</div>
-  </div>
-  <div class="card">
-    <div class="card-title">Profit Global</div>
-    <div id="totalProfit" class="value positive">$0</div>
-  </div>
-</div>
-
-<!-- PAR GANG -->
-<h2>Résumé par Gang</h2>
-<table>
-  <thead>
-    <tr>
-      <th>Gang</th>
-      <th>Achat total</th>
-      <th>Vente totale</th>
-      <th>Profit</th>
-      <th>Transactions</th>
-    </tr>
-  </thead>
-  <tbody id="gangTable"></tbody>
-</table>
-
-<!-- PAR CATÉGORIE -->
-<h2>Résumé par Catégorie</h2>
-<table>
-  <thead>
-    <tr>
-      <th>Catégorie</th>
-      <th>Achat total</th>
-      <th>Vente totale</th>
-      <th>Profit</th>
-      <th>Quantité totale</th>
-    </tr>
-  </thead>
-  <tbody id="categoryTable"></tbody>
-</table>
-
-<!-- AJOUT TRANSACTION -->
-<h2>Ajouter un achat</h2>
-<div class="form-container">
-
-  <div class="flex-row">
-    <div>
-      <label>Gang</label>
-      <select id="gang">
-        <option value="">Choisir un gang</option>
-        <option>Ballas</option>
-        <option>Vagos</option>
-        <option>Families</option>
-        <option>Marabunta</option>
-        <option>Monarcas</option>
-        <option>Napolis-Bloc</option>
-        <option>Chicago-Black-King</option>
-        <option>Get-Back-Gang</option>
-        <option>Black-Savage-Squad</option>
-      </select>
+    <div class="card">
+      <div class="card-title">Valeur Vente (toutes commandes)</div>
+      <div id="totalSell" class="value">$0</div>
     </div>
-
-    <div>
-      <label>Objet</label>
-      <select id="itemSelect">
-        <option value="">Choisir un item</option>
-      </select>
+    <div class="card">
+      <div class="card-title">Profit Global (toutes commandes)</div>
+      <div id="totalProfit" class="value positive">$0</div>
     </div>
   </div>
 
-  <div class="flex-row">
-    <div>
-      <label>Catégorie</label>
-      <input id="category" readonly>
+  <!-- PAR GANG -->
+  <h2>Résumé par Gang (cumul)</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Gang</th>
+        <th>Achat total</th>
+        <th>Vente totale</th>
+        <th>Profit</th>
+        <th>Transactions</th>
+      </tr>
+    </thead>
+    <tbody id="gangTable"></tbody>
+  </table>
+
+  <!-- PAR COMMANDE -->
+  <h2>Résumé par Commande (Dimanche / Aujourd’hui / Demain…)</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Gang</th>
+        <th>Label</th>
+        <th>Achat total</th>
+        <th>Vente totale</th>
+        <th>Profit</th>
+        <th>Lignes</th>
+      </tr>
+    </thead>
+    <tbody id="ordersTable"></tbody>
+  </table>
+
+  <!-- PAR CATÉGORIE -->
+  <h2>Résumé par Catégorie (cumul)</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Catégorie</th>
+        <th>Achat total</th>
+        <th>Vente totale</th>
+        <th>Profit</th>
+        <th>Quantité totale</th>
+      </tr>
+    </thead>
+    <tbody id="categoryTable"></tbody>
+  </table>
+
+  <!-- COMMANDES + AJOUT TRANSACTION -->
+  <h2>Commandes & Ajout</h2>
+  <div class="form-container">
+    <div class="section-title">1) Créer une commande (obligatoire pour garder l’historique)</div>
+    <div class="flex-row-3">
+      <div>
+        <label>Gang (commande)</label>
+        <select id="orderGang">
+          <option value="">Choisir un gang</option>
+          <option>Ballas</option>
+          <option>Vagos</option>
+          <option>Families</option>
+          <option>Marabunta</option>
+          <option>Monarcas</option>
+          <option>Napolis-Bloc</option>
+          <option>Chicago-Black-King</option>
+          <option>Get-Back-Gang</option>
+          <option>Black-Savage-Squad</option>
+        </select>
+      </div>
+
+      <div>
+        <label>Date de commande</label>
+        <input type="date" id="orderDate" />
+      </div>
+
+      <div>
+        <label>Label (ex: Remise #12)</label>
+        <input type="text" id="orderLabel" placeholder="Optionnel" />
+      </div>
     </div>
-    <div>
-      <label>Nom</label>
-      <input id="name" readonly>
+    <div class="row-actions">
+      <button id="createOrderBtn">Créer la commande</button>
+      <span class="muted">➡️ Ensuite, sélectionne-la juste en dessous et ajoute les items.</span>
     </div>
+
+    <div class="section-title">2) Choisir la commande active</div>
+    <div class="flex-row">
+      <div>
+        <label>Commande active</label>
+        <select id="activeOrderSelect">
+          <option value="">Aucune</option>
+        </select>
+        <div class="mini">💡 Une nouvelle commande = tu gardes “hier” + tu ajoutes “aujourd’hui” sans écraser.</div>
+      </div>
+
+      <div>
+        <label>Gang (auto depuis commande)</label>
+        <input id="gang" readonly />
+      </div>
+    </div>
+
+    <div class="section-title">3) Ajouter une ligne à la commande</div>
+
+    <div class="flex-row">
+      <div>
+        <label>Objet</label>
+        <select id="itemSelect">
+          <option value="">Choisir un item</option>
+        </select>
+      </div>
+
+      <div>
+        <label>Quantité</label>
+        <input type="number" id="qty" placeholder="Quantité" />
+      </div>
+    </div>
+
+    <div class="flex-row">
+      <div>
+        <label>Catégorie</label>
+        <input id="category" readonly />
+      </div>
+      <div>
+        <label>Nom</label>
+        <input id="name" readonly />
+      </div>
+    </div>
+
+    <div class="flex-row">
+      <div>
+        <label>Prix Achat</label>
+        <input id="price_buy" readonly />
+      </div>
+      <div>
+        <label>Prix Vente</label>
+        <input id="price_sell" readonly />
+      </div>
+    </div>
+
+    <button id="addBtn">Ajouter à la commande</button>
   </div>
 
-  <div class="flex-row">
-    <div>
-      <label>Prix Achat</label>
-      <input id="price_buy" readonly>
-    </div>
-    <div>
-      <label>Prix Vente</label>
-      <input id="price_sell" readonly>
-    </div>
+  <!-- Détails des Transactions -->
+  <h2>Détails des Transactions</h2>
+
+  <!-- BOUTONS RESET -->
+  <div class="btn-row">
+    <button id="resetCurrentOrder" class="danger">Reset la COMMANDE ACTIVE</button>
+    <button id="resetAboveZero">Reset uniquement les quantités &gt; 0</button>
+    <button id="resetAll">Reset TOUTES les quantités</button>
   </div>
 
-  <label>Quantité</label>
-  <input type="number" id="qty" placeholder="Quantité">
+  <!-- FILTRES -->
+  <div class="filters">
+    <select id="filterGang"><option value="">Filtrer par gang</option></select>
+    <select id="filterOrder"><option value="">Filtrer par commande</option></select>
+    <select id="filterCategory"><option value="">Filtrer par catégorie</option></select>
+  </div>
 
-  <button id="addBtn">Ajouter la transaction</button>
+  <!-- TABLE TRANSACTIONS -->
+  <table>
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Commande</th>
+        <th>Gang</th>
+        <th>Catégorie</th>
+        <th>Objet</th>
+        <th>Achat (unité)</th>
+        <th>Vente (unité)</th>
+        <th>Quantité</th>
+        <th>Total Achat</th>
+        <th>Total Vente</th>
+        <th>Profit</th>
+      </tr>
+    </thead>
+    <tbody id="itemsTable"></tbody>
+  </table>
 
-</div>
+  <script>
+    /* =========================
+      PIN
+    ========================= */
+    const CORRECT_PIN = "1510";
+    let pin = "";
 
-<!-- Détails des Transactions -->
-<h2>Détails des Transactions</h2>
+    const overlay = document.getElementById("pinOverlay");
+    const dots = document.querySelectorAll(".pin-dots span");
+    const errorMsg = document.getElementById("pinError");
 
-<!-- BOUTONS RESET -->
-<div class="btn-row">
-  <button id="resetAll">Reset TOUTES les quantités</button>
-  <button id="resetAboveZero">Reset uniquement les quantités > 0</button>
-</div>
+    document.querySelectorAll(".pad-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (pin.length >= 4) return;
 
-<!-- FILTRES -->
-<div class="filters">
-  <select id="filterGang"><option value="">Filtrer par gang</option></select>
-  <select id="filterCategory"><option value="">Filtrer par catégorie</option></select>
-</div>
+        pin += btn.textContent;
+        dots[pin.length - 1].classList.add("filled");
 
-<!-- TABLE TRANSACTIONS -->
-<table>
-  <thead>
-    <tr>
-      <th>Date</th>
-      <th>Gang</th>
-      <th>Catégorie</th>
-      <th>Objet</th>
-      <th>Achat (unité)</th>
-      <th>Vente (unité)</th>
-      <th>Quantité</th>
-      <th>Total Achat</th>
-      <th>Total Vente</th>
-      <th>Profit</th>
-    </tr>
-  </thead>
-  <tbody id="itemsTable"></tbody>
-</table>
-
-<script>
-  const CORRECT_PIN = "1510";
-  let pin = "";
-
-  const overlay = document.getElementById("pinOverlay");
-  const dots = document.querySelectorAll(".pin-dots span");
-  const errorMsg = document.getElementById("pinError");
-
-  document.querySelectorAll(".pad-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      if (pin.length >= 4) return;
-
-      pin += btn.textContent;
-      dots[pin.length - 1].classList.add("filled");
-
-      if (pin.length === 4) {
-        if (pin === CORRECT_PIN) {
-          overlay.style.opacity = "0";
-          overlay.style.transition = "0.7s ease";
-          setTimeout(() => overlay.remove(), 700);
-        } else {
-          errorMsg.style.opacity = 1;
-
-          dots.forEach(d => d.classList.remove("filled"));
-
-          setTimeout(() => {
-            errorMsg.style.opacity = 0;
-          }, 1400);
-
-          pin = "";
+        if (pin.length === 4) {
+          if (pin === CORRECT_PIN) {
+            overlay.style.opacity = "0";
+            overlay.style.transition = "0.7s ease";
+            setTimeout(() => overlay.remove(), 700);
+          } else {
+            errorMsg.style.opacity = 1;
+            dots.forEach(d => d.classList.remove("filled"));
+            setTimeout(() => { errorMsg.style.opacity = 0; }, 1400);
+            pin = "";
+          }
         }
+      });
+    });
+
+    /* =========================
+      SUPABASE
+    ========================= */
+    const supabaseClient = supabase.createClient(
+      "https://ldhxyloqdtplevdkgnah.supabase.co",
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxkaHh5bG9xZHRwbGV2ZGtnbmFoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEyMTg5NjAsImV4cCI6MjA3Njc5NDk2MH0.pnoppZtVEP3uDrMEfauPAMMB93EmGO5Ur1pg4OY99-o"
+    );
+
+    let catalog = [];
+    let transactions = [];
+    let orders = [];
+    let activeOrderId = null;
+
+    function money(n) { return "$" + Number(n || 0).toLocaleString("fr-FR"); }
+    function safe(n) { return Number.isFinite(Number(n)) ? Number(n) : 0; }
+
+    function fmtDateFR(d) {
+      try { return new Date(d).toLocaleDateString("fr-FR"); }
+      catch { return ""; }
+    }
+
+    function fmtOrderLabel(o) {
+      const date = o?.order_date ? new Date(o.order_date).toLocaleDateString("fr-FR") : fmtDateFR(o?.created_at);
+      const label = (o?.label && String(o.label).trim()) ? String(o.label).trim() : "Sans label";
+      return `[${o?.gang || "?"}] ${date} — ${label}`;
+    }
+
+    function setTodayDefault() {
+      const inp = document.getElementById("orderDate");
+      if (!inp.value) {
+        const now = new Date();
+        const yyyy = now.getFullYear();
+        const mm = String(now.getMonth() + 1).padStart(2, "0");
+        const dd = String(now.getDate()).padStart(2, "0");
+        inp.value = `${yyyy}-${mm}-${dd}`;
       }
-    });
-  });
+    }
 
-const supabaseClient = supabase.createClient(
-  "https://ldhxyloqdtplevdkgnah.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxkaHh5bG9xZHRwbGV2ZGtnbmFoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEyMTg5NjAsImV4cCI6MjA3Njc5NDk2MH0.pnoppZtVEP3uDrMEfauPAMMB93EmGO5Ur1pg4OY99-o"
-);
+    /* =========================
+      LOAD CATALOG
+    ========================= */
+    async function loadCatalog() {
+      const { data, error } = await supabaseClient.from("catalog").select("*").order("category");
+      if (error) {
+        alert("Erreur catalog : " + error.message);
+        catalog = [];
+      } else {
+        catalog = data || [];
+      }
 
-let catalog = [];
-let transactions = [];
+      const sel = document.getElementById("itemSelect");
+      sel.innerHTML = '<option value="">Choisir un item</option>';
 
-function money(n) { return "$" + Number(n).toLocaleString("fr-FR"); }
+      catalog.forEach(i => {
+        sel.innerHTML += `<option value="${i.id}">[${i.category}] ${i.name} — ${money(i.price_buy)}</option>`;
+      });
+    }
 
-async function loadCatalog() {
-  const { data } = await supabaseClient.from("catalog").select("*").order("category");
-  catalog = data || [];
+    document.getElementById("itemSelect").onchange = () => {
+      const id = Number(document.getElementById("itemSelect").value);
+      const item = catalog.find(i => i.id === id);
 
-  const sel = document.getElementById("itemSelect");
-  sel.innerHTML = '<option value="">Choisir un item</option>';
+      document.getElementById("category").value = item?.category || "";
+      document.getElementById("name").value = item?.name || "";
+      document.getElementById("price_buy").value = item?.price_buy ?? "";
+      document.getElementById("price_sell").value = item?.price_sell ?? "";
+    };
 
-  catalog.forEach(i => {
-    sel.innerHTML += `<option value="${i.id}">[${i.category}] ${i.name} — ${money(i.price_buy)}</option>`;
-  });
-}
+    /* =========================
+      LOAD ORDERS
+    ========================= */
+    async function loadOrders() {
+      // Si la table n'existe pas, Supabase renverra une erreur -> on gère proprement
+      const { data, error } = await supabaseClient
+        .from("recel_orders")
+        .select("*")
+        .order("order_date", { ascending: false })
+        .order("created_at", { ascending: false });
 
-document.getElementById("itemSelect").onchange = () => {
-  const id = Number(document.getElementById("itemSelect").value);
-  const item = catalog.find(i => i.id === id);
+      if (error) {
+        console.warn("recel_orders introuvable ou erreur:", error.message);
+        orders = [];
+      } else {
+        orders = data || [];
+      }
 
-  document.getElementById("category").value = item?.category || "";
-  document.getElementById("name").value = item?.name || "";
-  document.getElementById("price_buy").value = item?.price_buy || "";
-  document.getElementById("price_sell").value = item?.price_sell || "";
-};
+      renderOrdersSelects();
+    }
 
-async function loadTransactions() {
-  const { data } = await supabaseClient
-    .from("items")
-    .select("*, catalog(*)")
-    .order("created_at", { ascending: false });
+    function renderOrdersSelects() {
+      const activeSel = document.getElementById("activeOrderSelect");
+      const filterOrderSel = document.getElementById("filterOrder");
 
-  transactions = data || [];
+      const gangFilter = document.getElementById("filterGang").value;
+      const filteredOrders = gangFilter ? orders.filter(o => o.gang === gangFilter) : orders.slice();
 
-  renderDashboard();
-  renderGangTable();
-  renderCategoryTable();
-  loadFilters();
-  renderTransactionsTable();
-}
+      // Active order select
+      activeSel.innerHTML = '<option value="">Aucune</option>';
+      filteredOrders.forEach(o => {
+        activeSel.innerHTML += `<option value="${o.id}">${fmtOrderLabel(o)}</option>`;
+      });
 
-function renderDashboard() {
-  let buy = 0, sell = 0;
+      // Filter order select
+      filterOrderSel.innerHTML = '<option value="">Filtrer par commande</option>';
+      filteredOrders.forEach(o => {
+        filterOrderSel.innerHTML += `<option value="${o.id}">${fmtOrderLabel(o)}</option>`;
+      });
 
-  transactions.forEach(t => {
-    buy += t.catalog.price_buy * t.qty;
-    sell += t.catalog.price_sell * t.qty;
-  });
+      // Conserver activeOrderId si possible
+      if (activeOrderId && filteredOrders.some(o => String(o.id) === String(activeOrderId))) {
+        activeSel.value = String(activeOrderId);
+      } else {
+        activeOrderId = filteredOrders[0]?.id ?? null;
+        activeSel.value = activeOrderId ? String(activeOrderId) : "";
+      }
 
-  document.getElementById("totalBuy").textContent = money(buy);
-  document.getElementById("totalSell").textContent = money(sell);
+      syncGangFromActiveOrder();
+    }
 
-  const profit = sell - buy;
-  const profitEl = document.getElementById("totalProfit");
-  profitEl.textContent = money(profit);
-  profitEl.className = "value " + (profit >= 0 ? "positive" : "negative");
-}
+    function syncGangFromActiveOrder() {
+      const g = document.getElementById("gang");
+      const o = orders.find(x => String(x.id) === String(activeOrderId));
+      g.value = o?.gang || "";
+    }
 
-function renderGangTable() {
-  const tbody = document.getElementById("gangTable");
-  tbody.innerHTML = "";
+    document.getElementById("activeOrderSelect").onchange = () => {
+      activeOrderId = document.getElementById("activeOrderSelect").value
+        ? Number(document.getElementById("activeOrderSelect").value)
+        : null;
+      syncGangFromActiveOrder();
+    };
 
-  const gangs = {};
+    /* =========================
+      CREATE ORDER
+    ========================= */
+    document.getElementById("createOrderBtn").onclick = async () => {
+      const gang = document.getElementById("orderGang").value;
+      const order_date = document.getElementById("orderDate").value;
+      const label = document.getElementById("orderLabel").value;
 
-  transactions.forEach(t => {
-    if (!gangs[t.gang]) gangs[t.gang] = { buy: 0, sell: 0, qty: 0 };
+      if (!gang) { alert("Choisis un gang pour la commande."); return; }
+      if (!order_date) { alert("Choisis une date de commande."); return; }
 
-    gangs[t.gang].buy += t.catalog.price_buy * t.qty;
-    gangs[t.gang].sell += t.catalog.price_sell * t.qty;
-    gangs[t.gang].qty++;
-  });
+      const payload = { gang, order_date, label: (label || "").trim() || null };
 
-  Object.entries(gangs).forEach(([gang, v]) => {
-    const profit = v.sell - v.buy;
-    tbody.innerHTML += `
-      <tr>
-        <td>${gang}</td>
-        <td>${money(v.buy)}</td>
-        <td>${money(v.sell)}</td>
-        <td class="${profit >= 0 ? 'positive' : 'negative'}">${money(profit)}</td>
-        <td>${v.qty}</td>
-      </tr>`;
-  });
-}
+      const { data, error } = await supabaseClient.from("recel_orders").insert([payload]).select("*").single();
+      if (error) { alert("Erreur création commande : " + error.message); return; }
 
-function renderCategoryTable() {
-  const tbody = document.getElementById("categoryTable");
-  tbody.innerHTML = "";
+      await loadOrders();
+      activeOrderId = data.id;
+      document.getElementById("activeOrderSelect").value = String(activeOrderId);
+      syncGangFromActiveOrder();
 
-  const cats = {};
+      document.getElementById("orderLabel").value = "";
+    };
 
-  transactions.forEach(t => {
-    if (!cats[t.catalog.category])
-      cats[t.catalog.category] = { buy: 0, sell: 0, qty: 0 };
+    /* =========================
+      LOAD TRANSACTIONS
+    ========================= */
+    async function loadTransactions() {
+      // On récupère l'order join si possible
+      // NOTE: si order_id / recel_orders n'existe pas encore, ça peut renvoyer erreur -> fallback
+      let res = await supabaseClient
+        .from("items")
+        .select("*, catalog(*), order:recel_orders(*)")
+        .order("created_at", { ascending: false });
 
-    cats[t.catalog.category].buy += t.catalog.price_buy * t.qty;
-    cats[t.catalog.category].sell += t.catalog.price_sell * t.qty;
-    cats[t.catalog.category].qty += t.qty;
-  });
+      if (res.error) {
+        console.warn("Join recel_orders impossible, fallback :", res.error.message);
+        res = await supabaseClient
+          .from("items")
+          .select("*, catalog(*)")
+          .order("created_at", { ascending: false });
+      }
 
-  Object.entries(cats).forEach(([cat, v]) => {
-    const profit = v.sell - v.buy;
-    tbody.innerHTML += `
-      <tr>
-        <td>${cat}</td>
-        <td>${money(v.buy)}</td>
-        <td>${money(v.sell)}</td>
-        <td class="${profit >= 0 ? 'positive' : 'negative'}">${money(profit)}</td>
-        <td>${v.qty}</td>
-      </tr>`;
-  });
-}
+      transactions = res.data || [];
 
-function loadFilters() {
-  const gangSel = document.getElementById("filterGang");
-  const catSel = document.getElementById("filterCategory");
+      renderDashboard();
+      renderGangTable();
+      renderOrdersTable();
+      renderCategoryTable();
+      loadFilters();
+      renderTransactionsTable();
+    }
 
-  const gangs = [...new Set(transactions.map(t => t.gang))];
-  const cats = [...new Set(transactions.map(t => t.catalog.category))];
+    /* =========================
+      DASHBOARD
+    ========================= */
+    function renderDashboard() {
+      let buy = 0, sell = 0;
 
-  gangSel.innerHTML = '<option value="">Filtrer par gang</option>';
-  catSel.innerHTML = '<option value="">Filtrer par catégorie</option>';
+      transactions.forEach(t => {
+        const pb = safe(t?.catalog?.price_buy);
+        const ps = safe(t?.catalog?.price_sell);
+        const q = safe(t?.qty);
+        buy += pb * q;
+        sell += ps * q;
+      });
 
-  gangs.forEach(g => gangSel.innerHTML += `<option>${g}</option>`);
-  cats.forEach(c => catSel.innerHTML += `<option>${c}</option>`);
+      document.getElementById("totalBuy").textContent = money(buy);
+      document.getElementById("totalSell").textContent = money(sell);
 
-  gangSel.onchange = renderTransactionsTable;
-  catSel.onchange = renderTransactionsTable;
-}
-
-function renderTransactionsTable() {
-  const gangFilter = document.getElementById("filterGang").value;
-  const catFilter = document.getElementById("filterCategory").value;
-  const tbody = document.getElementById("itemsTable");
-
-  tbody.innerHTML = "";
-
-  transactions
-    .filter(t => !gangFilter || t.gang === gangFilter)
-    .filter(t => !catFilter || t.catalog.category === catFilter)
-    .forEach(t => {
-      const buy = t.catalog.price_buy * t.qty;
-      const sell = t.catalog.price_sell * t.qty;
       const profit = sell - buy;
-
-      tbody.innerHTML += `
-        <tr>
-          <td>${new Date(t.created_at).toLocaleDateString()}</td>
-          <td>${t.gang}</td>
-          <td>${t.catalog.category}</td>
-          <td>${t.catalog.name}</td>
-          <td>${money(t.catalog.price_buy)}</td>
-          <td>${money(t.catalog.price_sell)}</td>
-          <td>
-            <input type="number" class="edit-qty" data-id="${t.id}" value="${t.qty}" style="width:70px">
-          </td>
-          <td>${money(buy)}</td>
-          <td>${money(sell)}</td>
-          <td class="${profit >= 0 ? 'positive' : 'negative'}">${money(profit)}</td>
-        </tr>`;
-    });
-
-document.querySelectorAll(".edit-qty").forEach(input => {
-  input.onchange = async () => {
-    const id = Number(input.dataset.id);
-    const newQty = Number(input.value);
-
-    if (newQty < 0 || Number.isNaN(newQty)) {
-      alert("Quantité invalide.");
-      return;
+      const profitEl = document.getElementById("totalProfit");
+      profitEl.textContent = money(profit);
+      profitEl.className = "value " + (profit >= 0 ? "positive" : "negative");
     }
 
-    const { error } = await supabaseClient
-      .from("items")
-      .update({ qty: newQty })
-      .eq("id", id);
+    /* =========================
+      RESUME PAR GANG
+    ========================= */
+    function renderGangTable() {
+      const tbody = document.getElementById("gangTable");
+      tbody.innerHTML = "";
 
-    if (error) {
-      alert("Erreur : " + error.message);
-      return;
+      const gangs = {};
+
+      transactions.forEach(t => {
+        const gang = t?.gang || "(Sans gang)";
+        if (!gangs[gang]) gangs[gang] = { buy: 0, sell: 0, lines: 0 };
+
+        gangs[gang].buy += safe(t?.catalog?.price_buy) * safe(t?.qty);
+        gangs[gang].sell += safe(t?.catalog?.price_sell) * safe(t?.qty);
+        gangs[gang].lines += 1;
+      });
+
+      Object.entries(gangs).forEach(([gang, v]) => {
+        const profit = v.sell - v.buy;
+        tbody.innerHTML += `
+          <tr>
+            <td>${gang}</td>
+            <td>${money(v.buy)}</td>
+            <td>${money(v.sell)}</td>
+            <td class="${profit >= 0 ? 'positive' : 'negative'}">${money(profit)}</td>
+            <td>${v.lines}</td>
+          </tr>`;
+      });
     }
 
-    // 🔥 RÉCUPÈRE LA TRANSACTION DEPUIS LE STATE (PAS LE HTML)
-    const t = transactions.find(x => x.id === id);
-    if (!t) return;
+    /* =========================
+      RESUME PAR COMMANDE
+    ========================= */
+    function renderOrdersTable() {
+      const tbody = document.getElementById("ordersTable");
+      tbody.innerHTML = "";
 
-    t.qty = newQty;
+      // Group par order_id (si présent), sinon fallback: par jour + gang (legacy)
+      const groups = new Map();
 
-    const buy = t.catalog.price_buy * newQty;
-    const sell = t.catalog.price_sell * newQty;
-    const profit = sell - buy;
+      transactions.forEach(t => {
+        const gang = t?.gang || "(Sans gang)";
+        const orderId = t?.order_id || t?.order?.id || null;
 
-    const row = input.closest("tr");
-    row.children[7].textContent = money(buy);
-    row.children[8].textContent = money(sell);
-    row.children[9].textContent = money(profit);
-    row.children[9].className = profit >= 0 ? "positive" : "negative";
+        let key;
+        let dateStr;
+        let labelStr;
 
-    // 🔄 Mets aussi à jour les totaux en haut
-    renderDashboard();
-    renderGangTable();
-    renderCategoryTable();
-  };
-});
+        if (orderId) {
+          const o = t.order || orders.find(x => String(x.id) === String(orderId));
+          dateStr = o?.order_date ? new Date(o.order_date).toISOString().slice(0,10) : (o?.created_at ? new Date(o.created_at).toISOString().slice(0,10) : "");
+          labelStr = (o?.label && String(o.label).trim()) ? String(o.label).trim() : "Sans label";
+          key = `order-${orderId}`;
+        } else {
+          // legacy fallback: chaque jour = une "commande"
+          const d = t?.created_at ? new Date(t.created_at) : new Date();
+          const y = d.getFullYear();
+          const m = String(d.getMonth() + 1).padStart(2, "0");
+          const day = String(d.getDate()).padStart(2, "0");
+          dateStr = `${y}-${m}-${day}`;
+          labelStr = "Legacy (sans order_id)";
+          key = `legacy-${gang}-${dateStr}`;
+        }
 
+        if (!groups.has(key)) {
+          groups.set(key, { gang, dateStr, labelStr, buy: 0, sell: 0, lines: 0 });
+        }
 
-}
+        const g = groups.get(key);
+        g.buy += safe(t?.catalog?.price_buy) * safe(t?.qty);
+        g.sell += safe(t?.catalog?.price_sell) * safe(t?.qty);
+        g.lines += 1;
+      });
 
-document.getElementById("addBtn").onclick = async () => {
-  const gang = document.getElementById("gang").value;
-  const itemId = Number(document.getElementById("itemSelect").value);
-  const qty = Number(document.getElementById("qty").value);
+      // tri par date desc
+      const arr = Array.from(groups.values()).sort((a, b) => (b.dateStr || "").localeCompare(a.dateStr || ""));
 
-  if (!gang || !itemId || qty <= 0) {
-    alert("Remplis correctement toutes les informations.");
-    return;
-  }
+      arr.forEach(v => {
+        const profit = v.sell - v.buy;
+        const dateFR = v.dateStr ? new Date(v.dateStr).toLocaleDateString("fr-FR") : "";
+        tbody.innerHTML += `
+          <tr>
+            <td>${dateFR}</td>
+            <td>${v.gang}</td>
+            <td>${v.labelStr}</td>
+            <td>${money(v.buy)}</td>
+            <td>${money(v.sell)}</td>
+            <td class="${profit >= 0 ? 'positive' : 'negative'}">${money(profit)}</td>
+            <td>${v.lines}</td>
+          </tr>`;
+      });
 
-  await supabaseClient.from("items").insert([{ catalog_id: itemId, gang, qty }]);
-  document.getElementById("qty").value = "";
-  loadTransactions();
-};
+      if (arr.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="muted">Aucune commande / transaction.</td></tr>`;
+      }
+    }
 
-/* RESET TOUT */
-document.getElementById("resetAll").onclick = async () => {
-  if (!confirm("Mettre TOUTES les quantités à zéro ?")) return;
+    /* =========================
+      RESUME PAR CATEGORIE
+    ========================= */
+    function renderCategoryTable() {
+      const tbody = document.getElementById("categoryTable");
+      tbody.innerHTML = "";
 
-  await supabaseClient.from("items").update({ qty: 0 }).neq("qty", 0);
-  loadTransactions();
-};
+      const cats = {};
 
-/* RESET UNIQUEMENT qty > 0 */
-document.getElementById("resetAboveZero").onclick = async () => {
-  if (!confirm("Mettre à zéro uniquement les quantités > 0 ?")) return;
+      transactions.forEach(t => {
+        const cat = t?.catalog?.category || "(Sans catégorie)";
+        if (!cats[cat]) cats[cat] = { buy: 0, sell: 0, qty: 0 };
 
-  await supabaseClient
-    .from("items")
-    .update({ qty: 0 })
-    .gt("qty", 0);
+        cats[cat].buy += safe(t?.catalog?.price_buy) * safe(t?.qty);
+        cats[cat].sell += safe(t?.catalog?.price_sell) * safe(t?.qty);
+        cats[cat].qty += safe(t?.qty);
+      });
 
-  loadTransactions();
-};
+      Object.entries(cats).forEach(([cat, v]) => {
+        const profit = v.sell - v.buy;
+        tbody.innerHTML += `
+          <tr>
+            <td>${cat}</td>
+            <td>${money(v.buy)}</td>
+            <td>${money(v.sell)}</td>
+            <td class="${profit >= 0 ? 'positive' : 'negative'}">${money(profit)}</td>
+            <td>${v.qty}</td>
+          </tr>`;
+      });
+    }
 
-(async function init() {
-  await loadCatalog();
-  await loadTransactions();
-})();
-</script>
+    /* =========================
+      FILTERS
+    ========================= */
+    function loadFilters() {
+      const gangSel = document.getElementById("filterGang");
+      const catSel = document.getElementById("filterCategory");
 
+      const gangs = [...new Set(transactions.map(t => t?.gang).filter(Boolean))];
+      const cats = [...new Set(transactions.map(t => t?.catalog?.category).filter(Boolean))];
+
+      gangSel.innerHTML = '<option value="">Filtrer par gang</option>';
+      catSel.innerHTML = '<option value="">Filtrer par catégorie</option>';
+
+      gangs.forEach(g => gangSel.innerHTML += `<option>${g}</option>`);
+      cats.forEach(c => catSel.innerHTML += `<option>${c}</option>`);
+
+      gangSel.onchange = () => {
+        // quand on filtre par gang, on refresh la liste de commandes (active & filtre)
+        renderOrdersSelects();
+        renderTransactionsTable();
+      };
+      catSel.onchange = renderTransactionsTable;
+
+      document.getElementById("filterOrder").onchange = renderTransactionsTable;
+    }
+
+    /* =========================
+      RENDER TRANSACTIONS TABLE
+    ========================= */
+    function renderTransactionsTable() {
+      const gangFilter = document.getElementById("filterGang").value;
+      const orderFilter = document.getElementById("filterOrder").value;
+      const catFilter = document.getElementById("filterCategory").value;
+      const tbody = document.getElementById("itemsTable");
+
+      tbody.innerHTML = "";
+
+      transactions
+        .filter(t => !gangFilter || t.gang === gangFilter)
+        .filter(t => !orderFilter || String(t.order_id || t.order?.id || "") === String(orderFilter))
+        .filter(t => !catFilter || (t?.catalog?.category === catFilter))
+        .forEach(t => {
+          const pb = safe(t?.catalog?.price_buy);
+          const ps = safe(t?.catalog?.price_sell);
+          const q = safe(t?.qty);
+
+          const buy = pb * q;
+          const sell = ps * q;
+          const profit = sell - buy;
+
+          const orderLabel = t?.order
+            ? fmtOrderLabel(t.order)
+            : (t?.order_id ? `Commande #${t.order_id}` : "Legacy");
+
+          tbody.innerHTML += `
+            <tr>
+              <td>${fmtDateFR(t.created_at)}</td>
+              <td><span class="badge">${orderLabel}</span></td>
+              <td>${t.gang || ""}</td>
+              <td>${t?.catalog?.category || ""}</td>
+              <td>${t?.catalog?.name || ""}</td>
+              <td>${money(pb)}</td>
+              <td>${money(ps)}</td>
+              <td>
+                <input type="number" class="edit-qty" data-id="${t.id}" value="${q}" style="width:90px">
+              </td>
+              <td>${money(buy)}</td>
+              <td>${money(sell)}</td>
+              <td class="${profit >= 0 ? 'positive' : 'negative'}">${money(profit)}</td>
+            </tr>`;
+        });
+
+      // bind edit qty
+      document.querySelectorAll(".edit-qty").forEach(input => {
+        input.onchange = async () => {
+          const id = Number(input.dataset.id);
+          const newQty = Number(input.value);
+
+          if (newQty < 0 || Number.isNaN(newQty)) {
+            alert("Quantité invalide.");
+            return;
+          }
+
+          const { error } = await supabaseClient
+            .from("items")
+            .update({ qty: newQty })
+            .eq("id", id);
+
+          if (error) {
+            alert("Erreur : " + error.message);
+            return;
+          }
+
+          const t = transactions.find(x => x.id === id);
+          if (!t) return;
+
+          t.qty = newQty;
+
+          const pb = safe(t?.catalog?.price_buy);
+          const ps = safe(t?.catalog?.price_sell);
+
+          const buy = pb * newQty;
+          const sell = ps * newQty;
+          const profit = sell - buy;
+
+          const row = input.closest("tr");
+          row.children[8].textContent = money(buy);
+          row.children[9].textContent = money(sell);
+          row.children[10].textContent = money(profit);
+          row.children[10].className = profit >= 0 ? "positive" : "negative";
+
+          renderDashboard();
+          renderGangTable();
+          renderOrdersTable();
+          renderCategoryTable();
+        };
+      });
+    }
+
+    /* =========================
+      ADD LINE TO ORDER
+    ========================= */
+    document.getElementById("addBtn").onclick = async () => {
+      const itemId = Number(document.getElementById("itemSelect").value);
+      const qty = Number(document.getElementById("qty").value);
+
+      if (!activeOrderId) {
+        alert("⚠️ Choisis ou crée une COMMANDE ACTIVE avant d’ajouter des items.");
+        return;
+      }
+
+      const order = orders.find(o => String(o.id) === String(activeOrderId));
+      const gang = order?.gang || "";
+
+      if (!gang || !itemId || qty <= 0) {
+        alert("Remplis correctement (commande, item, quantité).");
+        return;
+      }
+
+      // Si même item déjà dans la même commande -> on incrémente (tu ne perds pas de temps)
+      const existing = transactions.find(t =>
+        String(t.order_id || t.order?.id || "") === String(activeOrderId) &&
+        Number(t.catalog_id) === Number(itemId) &&
+        String(t.gang) === String(gang)
+      );
+
+      if (existing) {
+        const newQty = safe(existing.qty) + qty;
+
+        const { error } = await supabaseClient
+          .from("items")
+          .update({ qty: newQty })
+          .eq("id", existing.id);
+
+        if (error) { alert("Erreur update : " + error.message); return; }
+      } else {
+        const { error } = await supabaseClient
+          .from("items")
+          .insert([{ catalog_id: itemId, gang, qty, order_id: activeOrderId }]);
+
+        if (error) { alert("Erreur insert : " + error.message); return; }
+      }
+
+      document.getElementById("qty").value = "";
+      await loadTransactions();
+    };
+
+    /* =========================
+      RESET
+    ========================= */
+    document.getElementById("resetAll").onclick = async () => {
+      if (!confirm("Mettre TOUTES les quantités à zéro ?")) return;
+
+      const { error } = await supabaseClient.from("items").update({ qty: 0 }).neq("qty", 0);
+      if (error) { alert("Erreur : " + error.message); return; }
+      loadTransactions();
+    };
+
+    document.getElementById("resetAboveZero").onclick = async () => {
+      if (!confirm("Mettre à zéro uniquement les quantités > 0 ?")) return;
+
+      const { error } = await supabaseClient.from("items").update({ qty: 0 }).gt("qty", 0);
+      if (error) { alert("Erreur : " + error.message); return; }
+      loadTransactions();
+    };
+
+    document.getElementById("resetCurrentOrder").onclick = async () => {
+      if (!activeOrderId) { alert("Aucune commande active."); return; }
+      if (!confirm("Mettre à zéro UNIQUEMENT la commande active ?")) return;
+
+      const { error } = await supabaseClient
+        .from("items")
+        .update({ qty: 0 })
+        .eq("order_id", activeOrderId);
+
+      if (error) { alert("Erreur : " + error.message); return; }
+      loadTransactions();
+    };
+
+    /* =========================
+      INIT
+    ========================= */
+    (async function init() {
+      setTodayDefault();
+      await loadCatalog();
+      await loadOrders();
+      await loadTransactions();
+    })();
+  </script>
 </body>
 </html>
