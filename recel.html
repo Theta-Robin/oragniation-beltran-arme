@@ -603,10 +603,13 @@ function renderTransactionsTable() {
 
 document.querySelectorAll(".edit-qty").forEach(input => {
   input.onchange = async () => {
-    const id = input.dataset.id;
+    const id = Number(input.dataset.id);
     const newQty = Number(input.value);
 
-    if (newQty < 0) return alert("Quantité invalide.");
+    if (newQty < 0 || Number.isNaN(newQty)) {
+      alert("Quantité invalide.");
+      return;
+    }
 
     const { error } = await supabaseClient
       .from("items")
@@ -618,28 +621,29 @@ document.querySelectorAll(".edit-qty").forEach(input => {
       return;
     }
 
-    // Mise à jour locale immédiate (PAS DE RELOAD)
+    // 🔥 RÉCUPÈRE LA TRANSACTION DEPUIS LE STATE (PAS LE HTML)
+    const t = transactions.find(x => x.id === id);
+    if (!t) return;
+
+    t.qty = newQty;
+
+    const buy = t.catalog.price_buy * newQty;
+    const sell = t.catalog.price_sell * newQty;
+    const profit = sell - buy;
+
     const row = input.closest("tr");
-
-    const priceBuy = Number(
-      row.children[4].textContent.replace(/\$/g, "").replace(/\./g, "").replace(/,/g, "")
-    );
-
-    const priceSell = Number(
-      row.children[5].textContent.replace(/\$/g, "").replace(/\./g, "").replace(/,/g, "")
-    );
-
-    const totalBuy = priceBuy * newQty;
-    const totalSell = priceSell * newQty;
-    const profit = totalSell - totalBuy;
-
-    row.children[7].textContent = money(totalBuy);
-    row.children[8].textContent = money(totalSell);
+    row.children[7].textContent = money(buy);
+    row.children[8].textContent = money(sell);
     row.children[9].textContent = money(profit);
-
     row.children[9].className = profit >= 0 ? "positive" : "negative";
+
+    // 🔄 Mets aussi à jour les totaux en haut
+    renderDashboard();
+    renderGangTable();
+    renderCategoryTable();
   };
 });
+
 
 }
 
