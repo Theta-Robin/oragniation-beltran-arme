@@ -313,34 +313,7 @@
 
 <body>
   <!-- ==== ECRAN PIN SECURITE GTA RP ==== -->
-  <div id="pinOverlay">
-    <div class="pin-container">
-      <h2 class="pin-title">🔒 ACCÈS PROTÉGÉ</h2>
-      <p class="pin-subtitle">Veuillez entrer votre code</p>
-
-      <div class="pin-dots">
-        <span></span><span></span><span></span><span></span>
-      </div>
-
-      <div class="pin-pad">
-        <button class="pad-btn">1</button>
-        <button class="pad-btn">2</button>
-        <button class="pad-btn">3</button>
-
-        <button class="pad-btn">4</button>
-        <button class="pad-btn">5</button>
-        <button class="pad-btn">6</button>
-
-        <button class="pad-btn">7</button>
-        <button class="pad-btn">8</button>
-        <button class="pad-btn">9</button>
-
-        <button class="pad-btn zero">0</button>
-      </div>
-
-      <p id="pinError" class="pin-error">Code incorrect</p>
-    </div>
-  </div>
+  
   <!-- ==== FIN SECURITE ==== -->
 
   <h1>RECEL BUSINESS — BELTRAN LEYVA</h1>
@@ -547,35 +520,7 @@
     /* =========================
       PIN
     ========================= */
-    const CORRECT_PIN = "1111";
-    let pin = "";
-
-    const overlay = document.getElementById("pinOverlay");
-    const dots = document.querySelectorAll(".pin-dots span");
-    const errorMsg = document.getElementById("pinError");
-
-    document.querySelectorAll(".pad-btn").forEach(btn => {
-      btn.addEventListener("click", () => {
-        if (pin.length >= 4) return;
-
-        pin += btn.textContent;
-        dots[pin.length - 1].classList.add("filled");
-
-        if (pin.length === 4) {
-          if (pin === CORRECT_PIN) {
-            overlay.style.opacity = "0";
-            overlay.style.transition = "0.7s ease";
-            setTimeout(() => overlay.remove(), 700);
-          } else {
-            errorMsg.style.opacity = 1;
-            dots.forEach(d => d.classList.remove("filled"));
-            setTimeout(() => { errorMsg.style.opacity = 0; }, 1400);
-            pin = "";
-          }
-        }
-      });
-    });
-
+    
     /* =========================
       SUPABASE
     ========================= */
